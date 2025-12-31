@@ -1,0 +1,8 @@
+{
+  "name": "RiderHub SaaS - Logistics Human Resources & Recruitment",
+  "description": "A comprehensive SaaS platform for logistics companies to manage rider recruitment, fleet performance, and HR operations with AI-driven insights.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
