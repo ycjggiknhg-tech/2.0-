@@ -47,20 +47,25 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
     <div className="p-8">
       <div className="flex justify-between items-center mb-8 text-left">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">招聘管理中心</h1>
-          <p className="text-slate-500 text-sm">面试日期与姓名已按照您的要求优化至紧凑显示。</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">站点招聘管理</h1>
+          <p className="text-slate-500 text-sm">所有数据已开启本地加密存储，刷新不丢失。</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => setShowQRModal(true)} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 text-sm"><QrCode size={18} /> 获取填报码</button>
-          <button onClick={() => onAction('报表生成中...')} className="bg-white text-slate-700 border border-slate-200 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2 text-sm"><FileSpreadsheet size={18} className="text-green-600" /> 导出报表</button>
+          {/* 这里修改了文案，恢复为您要求的“添加应聘者（扫码）” */}
+          <button onClick={() => setShowQRModal(true)} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 text-sm">
+            <QrCode size={18} /> 添加应聘者（扫码）
+          </button>
+          <button onClick={() => onAction('报表生成中...')} className="bg-white text-slate-700 border border-slate-200 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2 text-sm">
+            <FileSpreadsheet size={18} className="text-green-600" /> 导出报表
+          </button>
         </div>
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden min-h-[500px]">
-        <div className="p-4 border-b border-slate-100 flex gap-4 bg-slate-50/50">
-          <div className="relative flex-1 text-left">
+        <div className="p-4 border-b border-slate-100 flex gap-4 bg-slate-50/50 text-left">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input type="text" placeholder="快速搜索姓名、站点或手机号..." className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none focus:ring-4 focus:ring-blue-50" />
+            <input type="text" placeholder="搜索姓名、电话或站点..." className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none focus:ring-4 focus:ring-blue-50" />
           </div>
           <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl hover:bg-white text-slate-600 bg-white text-sm font-bold"><Filter size={18} /> 筛选</button>
         </div>
@@ -70,25 +75,23 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
             <thead>
               <tr className="text-left bg-slate-50 border-b border-slate-100">
                 <th className="pl-6 pr-1 py-5 text-[10px] font-black uppercase text-slate-400 w-12">序号</th>
-                {/* 缩短间距核心逻辑：w-px 确保最小宽度，px-0.5 最小内边距 */}
-                <th className="px-0.5 py-5 text-[10px] font-black uppercase text-slate-400 w-px whitespace-nowrap">面试日期</th>
-                <th className="px-4 py-5 text-[10px] font-black uppercase text-slate-400 w-px whitespace-nowrap">姓名</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 w-44">是否通过状态</th>
+                {/* 紧致间距：面试日期与姓名并排排布 */}
+                <th className="px-0.5 py-5 text-[10px] font-black uppercase text-slate-400 w-px whitespace-nowrap text-left">面试日期</th>
+                <th className="px-4 py-5 text-[10px] font-black uppercase text-slate-400 w-px whitespace-nowrap text-left">姓名</th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 w-44">面试结论状态</th>
                 <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 w-32">待分配状态</th>
                 <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400">所属站点</th>
                 <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400">联系电话</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 text-right">操作</th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 text-right">管理</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-left">
               {applicants.map((applicant, index) => (
                 <tr key={applicant.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="pl-6 pr-1 py-5 text-sm font-medium text-slate-400 font-mono">{(index + 1).toString().padStart(2, '0')}</td>
-                  {/* 日期单元格 */}
                   <td className="px-0.5 py-5 whitespace-nowrap">
                     <span className="text-sm text-slate-600 font-bold font-mono tracking-tighter">{applicant.appliedDate}</span>
                   </td>
-                  {/* 姓名单元格：紧随日期之后 */}
                   <td className="px-4 py-5 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center font-black text-white text-[10px] shadow-sm">{applicant.name.charAt(0)}</div>
@@ -106,8 +109,8 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
                         }`}
                       >
                         <option value="pending">待定</option>
-                        <option value="passed">通过入职</option>
-                        <option value="failed">不通过</option>
+                        <option value="passed">通过</option>
+                        <option value="failed">拒绝</option>
                       </select>
                       <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" />
                     </div>
@@ -136,8 +139,8 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
                     </button>
                     {activeMenuId === applicant.id && (
                       <div className="absolute right-6 mt-1 w-44 bg-white border border-slate-100 rounded-xl shadow-2xl z-50 p-1 space-y-0.5 animate-in fade-in zoom-in-95 duration-100 text-left">
-                        <button onClick={() => { if (applicant.entryResult !== 'passed') return alert('请先将结论设为通过'); onHire(applicant); setActiveMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg"><UserPlus size={14} /> 确认入职并分车</button>
-                        <button onClick={() => handleDelete(applicant.id)} className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={14} /> 删除申请记录</button>
+                        <button onClick={() => { if (applicant.entryResult !== 'passed') return alert('请先通过面试结论'); onHire(applicant); setActiveMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg"><UserPlus size={14} /> 确认入职分车</button>
+                        <button onClick={() => handleDelete(applicant.id)} className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={14} /> 删除此条记录</button>
                       </div>
                     )}
                   </td>
@@ -152,13 +155,13 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm shadow-2xl p-8 text-center animate-in zoom-in-95">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-black uppercase">扫码快速填报</h2>
+              <h2 className="text-lg font-black uppercase">扫码快速录入</h2>
               <button onClick={() => setShowQRModal(false)} className="p-2 hover:bg-slate-50 rounded-full"><X className="text-slate-400" size={24} /></button>
             </div>
             <div className="bg-slate-50 p-8 rounded-3xl mb-8 border border-slate-100">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://riderhub.cn/apply" alt="qr" className="mx-auto" />
             </div>
-            <button onClick={() => { setShowQRModal(false); onOpenPublicForm(); }} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all">模拟手机申请端</button>
+            <button onClick={() => { setShowQRModal(false); onOpenPublicForm(); }} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all">模拟手机填报端</button>
           </div>
         </div>
       )}

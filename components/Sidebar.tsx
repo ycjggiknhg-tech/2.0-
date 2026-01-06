@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessag
     { id: 'dashboard', label: '控制概览', icon: LayoutDashboard },
     { id: 'recruitment', label: '站点招聘', icon: UserPlus },
     { id: 'riders', label: '骑手管理', icon: Users },
-    { id: 'devices', label: '资产设备', icon: Zap },
+    { id: 'devices', label: '财产管理', icon: Zap }, // 这里修改了标签
     { id: 'jobs', label: '人资团队', icon: Briefcase },
     { id: 'messages', label: '信息中心', icon: MessageSquare, badge: unreadMessages },
     { id: 'settings', label: '系统设置', icon: Settings },

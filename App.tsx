@@ -14,9 +14,11 @@ import { NavigationState, RiderStatus, Rider, Applicant, Staff, StaffRole, JobPo
 import { Search, Bell, Sparkles } from 'lucide-react';
 
 const STORAGE_KEYS = {
-  RIDERS: 'riderhub_v1_riders',
-  APPS: 'riderhub_v1_apps',
-  JOBS: 'riderhub_v1_jobs',
+  RIDERS: 'riderhub_v2_riders',
+  APPS: 'riderhub_v2_apps',
+  JOBS: 'riderhub_v2_jobs',
+  STAFF: 'riderhub_v2_staff',
+  DEVICES: 'riderhub_v2_devices'
 };
 
 const INITIAL_STAFF: Staff[] = [
@@ -33,9 +35,15 @@ const INITIAL_APPLICANTS: Applicant[] = [
   { id: '2', name: '赵大为', idNumber: '310101199205057777', contact: '13566667777', age: 31, city: '上海', station: '静安寺站', experience: '曾在顺丰工作', status: '面试中', entryResult: 'passed', appliedDate: '2023-10-25', assignmentStatus: '已预分配' }
 ];
 
+const INITIAL_DEVICES = [
+  { id: 'd1', type: '电动车' as const, code: 'EV-A9021', status: '正常' as const, rider: '张伟', lastSync: '2分钟前', location: '朝阳区三里屯' },
+  { id: 'd2', type: '换电电池' as const, code: 'BAT-X002', status: '低电量' as const, batteryLevel: 15, rider: '李娜', lastSync: '10秒前', location: '静安区南京西路' }
+];
+
 const App: React.FC = () => {
   const [nav, setNav] = useState<NavigationState>({ view: 'dashboard', port: 'admin' });
   
+  // 初始化逻辑：从存储中读取，没有则使用初始数据
   const [riders, setRiders] = useState<Rider[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.RIDERS);
     return saved ? JSON.parse(saved) : INITIAL_RIDERS;
@@ -51,14 +59,27 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [staff, setStaff] = useState<Staff[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.STAFF);
+    return saved ? JSON.parse(saved) : INITIAL_STAFF;
+  });
+
+  const [devices, setDevices] = useState<any[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.DEVICES);
+    return saved ? JSON.parse(saved) : INITIAL_DEVICES;
+  });
+
   const [selectedRider, setSelectedRider] = useState<Rider | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  // 状态监听：任何数据变化时立即保存到 LocalStorage，确保下次打开依然存在
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.RIDERS, JSON.stringify(riders));
     localStorage.setItem(STORAGE_KEYS.APPS, JSON.stringify(applicants));
     localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
-  }, [riders, applicants, jobs]);
+    localStorage.setItem(STORAGE_KEYS.STAFF, JSON.stringify(staff));
+    localStorage.setItem(STORAGE_KEYS.DEVICES, JSON.stringify(devices));
+  }, [riders, applicants, jobs, staff, devices]);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -84,7 +105,7 @@ const App: React.FC = () => {
     };
     setRiders([newRider, ...riders]);
     setApplicants(applicants.filter(a => a.id !== applicant.id));
-    showToast(`骑手 ${applicant.name} 入职成功！已分配车辆。`);
+    showToast(`骑手 ${applicant.name} 已入职，数据已永久保存。`);
   };
 
   if (nav.port === 'applicant-portal') {
@@ -107,10 +128,10 @@ const App: React.FC = () => {
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 py-4 flex justify-between items-center text-left">
           <div className="relative w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input type="text" placeholder="全系统深度检索..." className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-100/50 border-none text-sm outline-none" />
+            <input type="text" placeholder="全域数据深度检索..." className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-100/50 border-none text-sm outline-none" />
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => setNav({...nav, view: 'messages'})} className="p-2 hover:bg-slate-100 rounded-xl transition-colors relative">
+            <button onClick={() => setNav({...nav, view: 'messages'})} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
               <Sparkles size={18} className="text-blue-600 animate-pulse" />
             </button>
             <Bell size={20} className="text-slate-400 cursor-pointer" />
@@ -165,7 +186,7 @@ const App: React.FC = () => {
               </div>
             )
           )}
-          {nav.view === 'devices' && <DeviceManagement onAction={showToast} />}
+          {nav.view === 'devices' && <DeviceManagement devices={devices} setDevices={setDevices} onAction={showToast} />}
           {nav.view === 'jobs' && (
             <JobManagement 
               jobs={jobs} 
@@ -174,7 +195,7 @@ const App: React.FC = () => {
               onAction={showToast} 
             />
           )}
-          {nav.view === 'messages' && <Messenger riders={riders} staff={INITIAL_STAFF} onAction={showToast} />}
+          {nav.view === 'messages' && <Messenger riders={riders} staff={staff} onAction={showToast} />}
           {nav.view === 'settings' && <Settings />}
         </div>
       </main>
