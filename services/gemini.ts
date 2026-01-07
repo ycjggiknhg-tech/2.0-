@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const getAIAnalysis = async (applicantData: any) => {
@@ -44,17 +43,20 @@ export const parseIdCardImage = async (base64Image: string) => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: [
-      {
-        text: "请识别并提取这张身份证照片中的信息。提取内容：姓名(name)、18位身份证号(idNumber)、根据出生日期计算出的当前年龄(age，数字类型)。如果是无效的身份证，请返回空对象。"
-      },
-      {
-        inlineData: {
-          mimeType: "image/jpeg",
-          data: base64Image
+    // Fix: Wrap multimodal parts in a single content object as per the recommended @google/genai usage
+    contents: {
+      parts: [
+        {
+          text: "请识别并提取这张身份证照片中的信息。提取内容：姓名(name)、18位身份证号(idNumber)、根据出生日期计算出的当前年龄(age，数字类型)。如果是无效的身份证，请返回空对象。"
+        },
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: base64Image
+          }
         }
-      }
-    ],
+      ]
+    },
     config: {
       responseMimeType: "application/json",
       responseSchema: {

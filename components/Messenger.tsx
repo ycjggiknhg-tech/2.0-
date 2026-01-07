@@ -30,8 +30,8 @@ const Messenger: React.FC<MessengerProps> = ({ riders, staff, onAction }) => {
     : staff.find(s => s.id === selectedId);
 
   return (
-    <div className="p-8 h-[calc(100vh-80px)]">
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 flex h-full overflow-hidden">
+    <div className="p-8 h-full flex flex-col">
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-80 border-r border-slate-100 flex flex-col bg-slate-50/50">
           <div className="p-6 border-b border-slate-100 bg-white">
@@ -95,19 +95,19 @@ const Messenger: React.FC<MessengerProps> = ({ riders, staff, onAction }) => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 bg-slate-50/20 flex flex-col">
+        <div className="flex-1 bg-slate-50/20 flex flex-col min-w-0 overflow-hidden">
           {selectedPerson ? (
             <div className="flex-1 overflow-y-auto p-12">
-              <div className="max-w-3xl mx-auto space-y-12">
+              <div className="max-w-3xl mx-auto space-y-12 animate-in fade-in duration-500">
                 {/* Header Profile */}
-                <div className="flex items-start gap-8">
+                <div className="flex items-start gap-8 flex-wrap">
                   <div className="relative">
                     <img src={(selectedPerson as any).avatar} className="w-32 h-32 rounded-[2.5rem] object-cover ring-8 ring-white shadow-xl" alt={selectedPerson.name} />
                     <div className={`absolute -bottom-2 -right-2 px-3 py-1 rounded-full border-4 border-white text-[10px] font-black uppercase tracking-wider text-white ${(selectedPerson as any).status === RiderStatus.ACTIVE || (selectedPerson as any).status === '在职' ? 'bg-green-500' : 'bg-orange-500'}`}>
                       {(selectedPerson as any).status}
                     </div>
                   </div>
-                  <div className="flex-1 text-left pt-2">
+                  <div className="flex-1 text-left pt-2 min-w-[200px]">
                     <h1 className="text-4xl font-black text-slate-900 mb-2">{selectedPerson.name}</h1>
                     <div className="flex flex-wrap gap-2 mb-6">
                       <span className="px-3 py-1 bg-blue-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest">
@@ -164,7 +164,7 @@ const Messenger: React.FC<MessengerProps> = ({ riders, staff, onAction }) => {
 
                 {/* Performance or Specific Info */}
                 {activeCategory === 'rider' ? (
-                  <div className="bg-blue-600 p-8 rounded-[2.5rem] text-white flex justify-between items-center shadow-2xl shadow-blue-200">
+                  <div className="bg-blue-600 p-8 rounded-[2.5rem] text-white flex justify-between items-center shadow-2xl shadow-blue-200 flex-wrap gap-4">
                     <div className="text-left">
                       <p className="text-blue-100 text-xs font-bold uppercase tracking-widest mb-1">年度考核表现</p>
                       <h3 className="text-4xl font-black">卓越 (4.9/5.0)</h3>
@@ -181,7 +181,7 @@ const Messenger: React.FC<MessengerProps> = ({ riders, staff, onAction }) => {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white flex justify-between items-center shadow-2xl">
+                  <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white flex justify-between items-center shadow-2xl flex-wrap gap-4">
                     <div className="text-left">
                       <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">内部管理权限</p>
                       <h3 className="text-2xl font-black">{(selectedPerson as Staff).role}</h3>

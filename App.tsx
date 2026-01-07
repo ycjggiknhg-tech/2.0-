@@ -10,6 +10,7 @@ import DeviceManagement from './components/DeviceManagement';
 import JobManagement from './components/JobManagement';
 import AIConsultant from './components/AIConsultant';
 import PublicApplication from './components/PublicApplication';
+import VehicleAssignmentView from './components/VehicleAssignmentView';
 import { NavigationState, RiderStatus, Rider, Applicant, Staff, StaffRole, JobPost } from './types';
 import { Search, Bell, Sparkles } from 'lucide-react';
 
@@ -37,13 +38,14 @@ const INITIAL_APPLICANTS: Applicant[] = [
 
 const INITIAL_DEVICES = [
   { id: 'd1', type: '电动车' as const, code: 'EV-A9021', status: '正常' as const, rider: '张伟', lastSync: '2分钟前', location: '朝阳区三里屯' },
-  { id: 'd2', type: '换电电池' as const, code: 'BAT-X002', status: '低电量' as const, batteryLevel: 15, rider: '李娜', lastSync: '10秒前', location: '静安区南京西路' }
+  { id: 'd2', type: '换电电池' as const, code: 'BAT-X002', status: '低电量' as const, batteryLevel: 15, rider: '李娜', lastSync: '10秒前', location: '静安区南京西路' },
+  { id: 'd3', type: '电动车' as const, code: 'EV-B1100', status: '正常' as const, rider: '未分配', lastSync: '1小时前', location: '朝阳三里屯站仓库' },
+  { id: 'd4', type: '电动车' as const, code: 'EV-C5522', status: '正常' as const, rider: '未分配', lastSync: '30分钟前', location: '静安寺站仓库' }
 ];
 
 const App: React.FC = () => {
   const [nav, setNav] = useState<NavigationState>({ view: 'dashboard', port: 'admin' });
   
-  // 初始化逻辑：从存储中读取，没有则使用初始数据
   const [riders, setRiders] = useState<Rider[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.RIDERS);
     return saved ? JSON.parse(saved) : INITIAL_RIDERS;
@@ -70,9 +72,9 @@ const App: React.FC = () => {
   });
 
   const [selectedRider, setSelectedRider] = useState<Rider | null>(null);
+  const [assigningApplicant, setAssigningApplicant] = useState<Applicant | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  // 状态监听：任何数据变化时立即保存到 LocalStorage，确保下次打开依然存在
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.RIDERS, JSON.stringify(riders));
     localStorage.setItem(STORAGE_KEYS.APPS, JSON.stringify(applicants));
@@ -86,7 +88,18 @@ const App: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleHireApplicant = (applicant: Applicant) => {
+  const handleStartHireFlow = (applicant: Applicant) => {
+    setAssigningApplicant(applicant);
+    setNav({ ...nav, view: 'vehicle-assignment' });
+  };
+
+  const handleUpdateDevice = (updatedDevice: any) => {
+    setDevices(prev => prev.map(d => d.id === updatedDevice.id ? updatedDevice : d));
+  };
+
+  const handleCompleteHiring = (applicant: Applicant, deviceId: string) => {
+    const selectedDevice = devices.find(d => d.id === deviceId);
+    
     const newRider: Rider = {
       id: 'R' + Date.now(),
       name: applicant.name,
@@ -99,33 +112,61 @@ const App: React.FC = () => {
       station: applicant.station,
       contact: applicant.contact,
       email: `${applicant.name}@riderhub.cn`,
-      vehicleType: '已分配车辆',
+      vehicleType: selectedDevice ? `智能电动车 (${selectedDevice.code})` : '待分配',
+      licensePlate: selectedDevice?.code,
       activityHistory: [],
       recentFeedback: []
     };
+
+    if (deviceId !== 'skip') {
+      setDevices(prev => prev.map(d => 
+        d.id === deviceId ? { ...d, rider: applicant.name } : d
+      ));
+    }
+
     setRiders([newRider, ...riders]);
     setApplicants(applicants.filter(a => a.id !== applicant.id));
-    showToast(`骑手 ${applicant.name} 已入职，数据已永久保存。`);
+    setAssigningApplicant(null);
+    setNav({ ...nav, view: 'riders' });
+    showToast(`骑手 ${applicant.name} 已入职并成功绑定车辆 ${selectedDevice?.code || ''}`);
   };
 
   if (nav.port === 'applicant-portal') {
     return (
-      <PublicApplication 
-        onApply={(app) => {
-          setApplicants([app, ...applicants]);
-          setNav({ ...nav, port: 'admin', view: 'recruitment' });
-          showToast('申请提交成功，已在后台显示');
-        }} 
-        onBack={() => setNav({ ...nav, port: 'admin', view: 'recruitment' })} 
-      />
+      <div className="h-screen overflow-hidden">
+        <PublicApplication 
+          onApply={(app) => {
+            setApplicants([app, ...applicants]);
+            setNav({ ...nav, port: 'admin', view: 'recruitment' });
+            showToast('申请提交成功，已在后台显示');
+          }} 
+          onBack={() => setNav({ ...nav, port: 'admin', view: 'recruitment' })} 
+        />
+      </div>
+    );
+  }
+
+  if (nav.view === 'vehicle-assignment' && assigningApplicant) {
+    return (
+      <div className="h-screen overflow-hidden">
+        <VehicleAssignmentView 
+          applicant={assigningApplicant} 
+          allVehicles={devices}
+          onClose={() => { setAssigningApplicant(null); setNav({ ...nav, view: 'recruitment' }); }}
+          onConfirm={(deviceId) => handleCompleteHiring(assigningApplicant, deviceId)}
+          onUpdateVehicle={handleUpdateDevice}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-['Noto_Sans_SC']">
+    <div className="flex h-screen bg-slate-50 font-['Noto_Sans_SC'] overflow-hidden">
       <Sidebar currentView={nav.view} onNavigate={(view) => { setNav({ ...nav, view }); setSelectedRider(null); }} />
-      <main className="flex-1 ml-64 flex flex-col">
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 py-4 flex justify-between items-center text-left">
+      
+      {/* 主布局容器：ml-64 腾出侧边栏空间，h-full 保证高度充满 */}
+      <main className="flex-1 ml-64 flex flex-col min-w-0 bg-white">
+        <header className="h-16 shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 flex justify-between items-center text-left sticky top-0 z-40">
           <div className="relative w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input type="text" placeholder="全域数据深度检索..." className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-100/50 border-none text-sm outline-none" />
@@ -141,14 +182,15 @@ const App: React.FC = () => {
           </div>
         </header>
         
-        <div className="flex-1 overflow-y-auto">
+        {/* 滚动内容区：这里是修复的关键，flex-1 + overflow-y-auto */}
+        <div className="flex-1 overflow-y-auto relative bg-slate-50/30">
           {nav.view === 'dashboard' && <Dashboard riders={riders} onNavigate={(v) => setNav({ ...nav, view: v })} />}
           {nav.view === 'recruitment' && (
             <Recruitment 
               applicants={applicants} 
               setApplicants={setApplicants}
               onOpenPublicForm={() => setNav({ ...nav, port: 'applicant-portal' })}
-              onHire={handleHireApplicant}
+              onHire={handleStartHireFlow}
               onAction={showToast} 
             />
           )}
@@ -156,7 +198,7 @@ const App: React.FC = () => {
             selectedRider ? (
               <RiderDetail rider={selectedRider} onBack={() => setSelectedRider(null)} onMessage={() => setNav({ ...nav, view: 'messages' })} onAction={showToast} />
             ) : (
-              <div className="p-8 text-left">
+              <div className="p-8 text-left animate-in fade-in duration-300">
                 <h1 className="text-2xl font-bold text-slate-900 mb-6 tracking-tight">骑手档案库</h1>
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                   <table className="w-full text-left">
@@ -199,7 +241,7 @@ const App: React.FC = () => {
           {nav.view === 'settings' && <Settings />}
         </div>
       </main>
-      
+
       {toast && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3.5 rounded-2xl bg-slate-900 text-white shadow-2xl text-sm font-bold animate-in slide-in-from-bottom-5 border border-slate-800">
           {toast}

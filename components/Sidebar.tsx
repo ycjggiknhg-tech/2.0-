@@ -23,14 +23,14 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessag
     { id: 'dashboard', label: '控制概览', icon: LayoutDashboard },
     { id: 'recruitment', label: '站点招聘', icon: UserPlus },
     { id: 'riders', label: '骑手管理', icon: Users },
-    { id: 'devices', label: '财产管理', icon: Zap }, // 这里修改了标签
+    { id: 'devices', label: '财产管理', icon: Zap },
     { id: 'jobs', label: '人资团队', icon: Briefcase },
     { id: 'messages', label: '信息中心', icon: MessageSquare, badge: unreadMessages },
     { id: 'settings', label: '系统设置', icon: Settings },
   ];
 
   return (
-    <div className="w-64 bg-slate-900 h-screen flex flex-col fixed left-0 top-0">
+    <div className="w-64 bg-slate-900 h-screen flex flex-col fixed left-0 top-0 z-50 shadow-2xl">
       <div className="p-6 flex items-center gap-3">
         <div className="bg-blue-600 p-2 rounded-lg">
           <Bike className="text-white" size={24} />
@@ -48,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessag
               onClick={() => onNavigate(item.id as NavigationState['view'])}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all mb-1 relative ${
                 isActive 
-                  ? 'bg-blue-600 text-white shadow-lg' 
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' 
                   : 'text-slate-400 hover:bg-slate-800 hover:text-white'
               }`}
             >
@@ -66,7 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessag
 
       <div className="p-6 border-t border-slate-800">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-800" />
+          <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700" />
           <div className="text-left overflow-hidden">
             <p className="text-white text-sm font-medium truncate">运营主管</p>
             <p className="text-slate-500 text-xs truncate">SaaS Enterprise</p>

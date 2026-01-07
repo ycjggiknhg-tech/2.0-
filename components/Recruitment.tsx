@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, Filter, MapPin, UserCheck, Trash2, 
   ChevronDown, X, QrCode, FileSpreadsheet, 
-  UserPlus, Phone
+  UserPlus, Phone, AlertCircle
 } from 'lucide-react';
 import { Applicant } from '../types';
 
@@ -33,7 +33,7 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
         status: result === 'passed' ? '已发录用' : result === 'failed' ? '已拒绝' : '待处理' 
       } : app
     ));
-    onAction(`已更新面试结论`);
+    onAction(`已更新面试结论为：${result === 'passed' ? '通过' : result === 'failed' ? '拒绝' : '待定'}`);
   };
 
   const handleDelete = (id: string) => {
@@ -51,7 +51,6 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
           <p className="text-slate-500 text-sm">所有数据已开启本地加密存储，刷新不丢失。</p>
         </div>
         <div className="flex gap-3">
-          {/* 这里修改了文案，恢复为您要求的“添加应聘者（扫码）” */}
           <button onClick={() => setShowQRModal(true)} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 text-sm">
             <QrCode size={18} /> 添加应聘者（扫码）
           </button>
@@ -75,7 +74,6 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
             <thead>
               <tr className="text-left bg-slate-50 border-b border-slate-100">
                 <th className="pl-6 pr-1 py-5 text-[10px] font-black uppercase text-slate-400 w-12">序号</th>
-                {/* 紧致间距：面试日期与姓名并排排布 */}
                 <th className="px-0.5 py-5 text-[10px] font-black uppercase text-slate-400 w-px whitespace-nowrap text-left">面试日期</th>
                 <th className="px-4 py-5 text-[10px] font-black uppercase text-slate-400 w-px whitespace-nowrap text-left">姓名</th>
                 <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 w-44">面试结论状态</th>
@@ -139,8 +137,26 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
                     </button>
                     {activeMenuId === applicant.id && (
                       <div className="absolute right-6 mt-1 w-44 bg-white border border-slate-100 rounded-xl shadow-2xl z-50 p-1 space-y-0.5 animate-in fade-in zoom-in-95 duration-100 text-left">
-                        <button onClick={() => { if (applicant.entryResult !== 'passed') return alert('请先通过面试结论'); onHire(applicant); setActiveMenuId(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg"><UserPlus size={14} /> 确认入职分车</button>
-                        <button onClick={() => handleDelete(applicant.id)} className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={14} /> 删除此条记录</button>
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (applicant.entryResult !== 'passed') {
+                              onAction('⚠️ 请先将面试结论修改为“通过”再办理入职');
+                              return;
+                            }
+                            onHire(applicant); 
+                            setActiveMenuId(null); 
+                          }} 
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg"
+                        >
+                          <UserPlus size={14} /> 确认入职分车
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleDelete(applicant.id); }} 
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 size={14} /> 删除此条记录
+                        </button>
                       </div>
                     )}
                   </td>

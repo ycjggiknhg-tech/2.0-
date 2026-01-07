@@ -71,7 +71,7 @@ export interface Applicant {
   station: string;
   experience: string;
   status: '待处理' | '面试中' | '背景调查' | '已发录用' | '已拒绝';
-  entryResult?: 'passed' | 'failed' | 'pending'; // 新增：入职结论
+  entryResult?: 'passed' | 'failed' | 'pending'; // 入职结论
   appliedDate: string;
   assignmentStatus: string;
   aiScore?: number;
@@ -94,6 +94,6 @@ export interface JobPost {
 export type AppPort = 'admin' | 'applicant-portal';
 
 export interface NavigationState {
-  view: 'dashboard' | 'recruitment' | 'riders' | 'jobs' | 'messages' | 'settings' | 'devices';
+  view: 'dashboard' | 'recruitment' | 'riders' | 'jobs' | 'messages' | 'settings' | 'devices' | 'vehicle-assignment';
   port: AppPort;
 }
