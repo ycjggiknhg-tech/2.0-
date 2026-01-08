@@ -23,8 +23,60 @@ const STORAGE_KEYS = {
 };
 
 const INITIAL_STAFF: Staff[] = [
-  { id: 's1', name: '王站长', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Wang', role: StaffRole.STATION_MANAGER, employeeId: 'M001', city: '北京', station: '朝阳三里屯站', contact: '138-1111-2222', email: 'wang@riderhub.cn', joinDate: '2021-05-10', status: '在职' },
-  { id: 's2', name: '李主管', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=LiHR', role: StaffRole.HR, employeeId: 'H002', city: '上海', station: '静安寺站', contact: '139-2222-3333', email: 'li_hr@riderhub.cn', joinDate: '2022-02-15', status: '在职' }
+  { 
+    id: 's1', 
+    name: '王大伟', 
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Wang', 
+    gender: '男',
+    age: 34,
+    role: StaffRole.STATION_MANAGER, 
+    employeeId: 'M001', 
+    city: '北京', 
+    station: '朝阳三里屯站', 
+    group: '核心管理组',
+    leader: '系统管理员',
+    contact: '138-1111-2222', 
+    email: 'wang@riderhub.cn', 
+    joinDate: '2021-05-10', 
+    status: '在职',
+    dailyPerformance: 85
+  },
+  { 
+    id: 's2', 
+    name: '李小美', 
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=LiHR', 
+    gender: '女',
+    age: 28,
+    role: StaffRole.HR, 
+    employeeId: 'H002', 
+    city: '上海', 
+    station: '静安寺站', 
+    group: '华东人资组',
+    leader: '王大伟',
+    contact: '139-2222-3333', 
+    email: 'li_hr@riderhub.cn', 
+    joinDate: '2022-02-15', 
+    status: '在职',
+    dailyPerformance: 92
+  },
+  { 
+    id: 's3', 
+    name: '赵强', 
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Zhao', 
+    gender: '男',
+    age: 29,
+    role: StaffRole.OPERATIONS, 
+    employeeId: 'O003', 
+    city: '北京', 
+    station: '朝阳三里屯站', 
+    group: '北京运营二组',
+    leader: '王大伟',
+    contact: '137-5555-6666', 
+    email: 'zhao@riderhub.cn', 
+    joinDate: '2023-01-20', 
+    status: '请假',
+    dailyPerformance: 64
+  }
 ];
 
 const INITIAL_RIDERS: Rider[] = [
@@ -37,10 +89,10 @@ const INITIAL_APPLICANTS: Applicant[] = [
 ];
 
 const INITIAL_DEVICES = [
-  { id: 'd1', type: '电动车' as const, code: 'EV-A9021', status: '正常' as const, rider: '张伟', lastSync: '2分钟前', location: '朝阳区三里屯' },
-  { id: 'd2', type: '换电电池' as const, code: 'BAT-X002', status: '低电量' as const, batteryLevel: 15, rider: '李娜', lastSync: '10秒前', location: '静安区南京西路' },
-  { id: 'd3', type: '电动车' as const, code: 'EV-B1100', status: '正常' as const, rider: '未分配', lastSync: '1小时前', location: '朝阳三里屯站仓库' },
-  { id: 'd4', type: '电动车' as const, code: 'EV-C5522', status: '正常' as const, rider: '未分配', lastSync: '30分钟前', location: '静安寺站仓库' }
+  { id: 'd1', type: '电动车' as const, code: 'EV-A9021', status: '正常' as const, rider: '张伟', lastSync: '2分钟前', location: '北京 朝阳三里屯站 仓库' },
+  { id: 'd2', type: '换电电池' as const, code: 'BAT-X002', status: '低电量' as const, batteryLevel: 15, rider: '李娜', lastSync: '10秒前', location: '上海 静安寺站 仓库' },
+  { id: 'd3', type: '电动车' as const, code: 'EV-B1100', status: '正常' as const, rider: '未分配', lastSync: '1小时前', location: '北京 朝阳三里屯站 仓库' },
+  { id: 'd4', type: '电动车' as const, code: 'EV-C5522', status: '正常' as const, rider: '未分配', lastSync: '30分钟前', location: '上海 静安寺站 仓库' }
 ];
 
 const App: React.FC = () => {
@@ -97,6 +149,17 @@ const App: React.FC = () => {
     setDevices(prev => prev.map(d => d.id === updatedDevice.id ? updatedDevice : d));
   };
 
+  const handleUpdateDevices = (updatedDevices: any[]) => {
+    setDevices(prev => {
+      const newDevices = [...prev];
+      updatedDevices.forEach(upd => {
+        const idx = newDevices.findIndex(d => d.id === upd.id);
+        if (idx !== -1) newDevices[idx] = upd;
+      });
+      return newDevices;
+    });
+  };
+
   const handleCompleteHiring = (applicant: Applicant, deviceId: string) => {
     const selectedDevice = devices.find(d => d.id === deviceId);
     
@@ -133,7 +196,7 @@ const App: React.FC = () => {
 
   if (nav.port === 'applicant-portal') {
     return (
-      <div className="h-screen overflow-hidden">
+      <div className="h-screen w-screen bg-slate-100">
         <PublicApplication 
           onApply={(app) => {
             setApplicants([app, ...applicants]);
@@ -148,26 +211,25 @@ const App: React.FC = () => {
 
   if (nav.view === 'vehicle-assignment' && assigningApplicant) {
     return (
-      <div className="h-screen overflow-hidden">
+      <div className="h-screen w-screen bg-slate-50">
         <VehicleAssignmentView 
           applicant={assigningApplicant} 
           allVehicles={devices}
           onClose={() => { setAssigningApplicant(null); setNav({ ...nav, view: 'recruitment' }); }}
           onConfirm={(deviceId) => handleCompleteHiring(assigningApplicant, deviceId)}
           onUpdateVehicle={handleUpdateDevice}
+          onUpdateDevices={handleUpdateDevices}
         />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 font-['Noto_Sans_SC'] overflow-hidden">
+    <div className="flex h-screen w-screen bg-slate-50 font-['Noto_Sans_SC'] overflow-hidden text-left">
       <Sidebar currentView={nav.view} onNavigate={(view) => { setNav({ ...nav, view }); setSelectedRider(null); }} />
-      
-      {/* 主布局容器：ml-64 腾出侧边栏空间，h-full 保证高度充满 */}
-      <main className="flex-1 ml-64 flex flex-col min-w-0 bg-white">
+      <main className="flex-1 flex flex-col min-w-0 bg-white">
         <header className="h-16 shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 flex justify-between items-center text-left sticky top-0 z-40">
-          <div className="relative w-96">
+          <div className="relative w-96 text-left">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input type="text" placeholder="全域数据深度检索..." className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-100/50 border-none text-sm outline-none" />
           </div>
@@ -181,64 +243,63 @@ const App: React.FC = () => {
             </div>
           </div>
         </header>
-        
-        {/* 滚动内容区：这里是修复的关键，flex-1 + overflow-y-auto */}
-        <div className="flex-1 overflow-y-auto relative bg-slate-50/30">
-          {nav.view === 'dashboard' && <Dashboard riders={riders} onNavigate={(v) => setNav({ ...nav, view: v })} />}
-          {nav.view === 'recruitment' && (
-            <Recruitment 
-              applicants={applicants} 
-              setApplicants={setApplicants}
-              onOpenPublicForm={() => setNav({ ...nav, port: 'applicant-portal' })}
-              onHire={handleStartHireFlow}
-              onAction={showToast} 
-            />
-          )}
-          {nav.view === 'riders' && (
-            selectedRider ? (
-              <RiderDetail rider={selectedRider} onBack={() => setSelectedRider(null)} onMessage={() => setNav({ ...nav, view: 'messages' })} onAction={showToast} />
-            ) : (
-              <div className="p-8 text-left animate-in fade-in duration-300">
-                <h1 className="text-2xl font-bold text-slate-900 mb-6 tracking-tight">骑手档案库</h1>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-100">
-                      <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                        <th className="px-6 py-4">姓名</th>
-                        <th className="px-6 py-4">状态</th>
-                        <th className="px-6 py-4">所属站点</th>
-                        <th className="px-6 py-4 text-right">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {riders.map(r => (
-                        <tr key={r.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => setSelectedRider(r)}>
-                          <td className="px-6 py-4 font-bold text-slate-900 flex items-center gap-3">
-                            <img src={r.avatar} className="w-8 h-8 rounded-lg bg-slate-100" />
-                            {r.name}
-                          </td>
-                          <td className="px-6 py-4 text-xs font-medium text-slate-600">{r.status}</td>
-                          <td className="px-6 py-4 text-xs text-blue-600 font-bold">{r.station}</td>
-                          <td className="px-6 py-4 text-right text-blue-600 font-bold text-xs">详情</td>
+        <div className="flex-1 overflow-auto relative bg-slate-50/30">
+          <div className="min-w-full">
+            {nav.view === 'dashboard' && <Dashboard riders={riders} onNavigate={(v) => setNav({ ...nav, view: v })} />}
+            {nav.view === 'recruitment' && (
+              <Recruitment 
+                applicants={applicants} 
+                setApplicants={setApplicants}
+                onOpenPublicForm={() => setNav({ ...nav, port: 'applicant-portal' })}
+                onHire={handleStartHireFlow}
+                onAction={showToast} 
+              />
+            )}
+            {nav.view === 'riders' && (
+              selectedRider ? (
+                <RiderDetail rider={selectedRider} onBack={() => setSelectedRider(null)} onMessage={() => setNav({ ...nav, view: 'messages' })} onAction={showToast} />
+              ) : (
+                <div className="p-8 text-left animate-in fade-in duration-300">
+                  <h1 className="text-2xl font-bold text-slate-900 mb-6 tracking-tight">骑手档案库</h1>
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50 border-b border-slate-100">
+                        <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                          <th className="px-6 py-4">姓名</th>
+                          <th className="px-6 py-4">状态</th>
+                          <th className="px-6 py-4">所属站点</th>
+                          <th className="px-6 py-4 text-right">操作</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {riders.map(r => (
+                          <tr key={r.id} className="hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => setSelectedRider(r)}>
+                            <td className="px-6 py-4 font-bold text-slate-900 flex items-center gap-3">
+                              <img src={r.avatar} className="w-8 h-8 rounded-lg bg-slate-100" />
+                              {r.name}
+                            </td>
+                            <td className="px-6 py-4 text-xs font-medium text-slate-600">{r.status}</td>
+                            <td className="px-6 py-4 text-xs text-blue-600 font-bold">{r.station}</td>
+                            <td className="px-6 py-4 text-right text-blue-600 font-bold text-xs">详情</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            )
-          )}
-          {nav.view === 'devices' && <DeviceManagement devices={devices} setDevices={setDevices} onAction={showToast} />}
-          {nav.view === 'jobs' && (
-            <JobManagement 
-              jobs={jobs} 
-              onAdd={(j) => setJobs([j, ...jobs])} 
-              onDelete={(id) => setJobs(jobs.filter(x => x.id !== id))} 
-              onAction={showToast} 
-            />
-          )}
-          {nav.view === 'messages' && <Messenger riders={riders} staff={staff} onAction={showToast} />}
-          {nav.view === 'settings' && <Settings />}
+              )
+            )}
+            {nav.view === 'devices' && <DeviceManagement devices={devices} setDevices={setDevices} onAction={showToast} />}
+            {nav.view === 'jobs' && (
+              <JobManagement 
+                staff={staff} 
+                setStaff={setStaff}
+                onAction={showToast} 
+              />
+            )}
+            {nav.view === 'messages' && <Messenger riders={riders} staff={staff} onAction={showToast} />}
+            {nav.view === 'settings' && <Settings />}
+          </div>
         </div>
       </main>
 

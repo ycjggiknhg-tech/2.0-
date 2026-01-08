@@ -140,6 +140,7 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
                         <button 
                           onClick={(e) => { 
                             e.stopPropagation(); 
+                            // 核心逻辑修复：拦截非通过状态的入职操作
                             if (applicant.entryResult !== 'passed') {
                               onAction('⚠️ 请先将面试结论修改为“通过”再办理入职');
                               return;

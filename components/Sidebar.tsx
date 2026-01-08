@@ -30,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessag
   ];
 
   return (
-    <div className="w-64 bg-slate-900 h-screen flex flex-col fixed left-0 top-0 z-50 shadow-2xl">
+    <div className="w-64 bg-slate-900 h-full flex flex-col flex-shrink-0 shadow-2xl relative z-50">
       <div className="p-6 flex items-center gap-3">
         <div className="bg-blue-600 p-2 rounded-lg">
           <Bike className="text-white" size={24} />
@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessag
         <h1 className="text-white font-bold text-xl tracking-tight text-left">RiderHub</h1>
       </div>
       
-      <nav className="flex-1 px-4 mt-6">
+      <nav className="flex-1 px-4 mt-6 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
@@ -64,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessag
         })}
       </nav>
 
-      <div className="p-6 border-t border-slate-800">
+      <div className="p-6 border-t border-slate-800 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700" />
           <div className="text-left overflow-hidden">

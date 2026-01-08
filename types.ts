@@ -51,14 +51,19 @@ export interface Staff {
   id: string;
   name: string;
   avatar: string;
+  gender: '男' | '女';
+  age: number;
   role: StaffRole;
   employeeId: string;
   city: string;
   station: string;
+  group: string; // 分组情况
+  leader: string; // 组长
   contact: string;
   email: string;
   joinDate: string;
   status: '在职' | '请假' | '离职';
+  dailyPerformance: number; // 每日出单情况 (平均)
 }
 
 export interface Applicant {
