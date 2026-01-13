@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, User, Phone, MapPin, FileText, CheckCircle2, Bike, ArrowRight, ShieldCheck, Camera, Scan, Loader2, X, RefreshCw, ChevronLeft } from 'lucide-react';
+import { ArrowLeft, User, Phone, MapPin, FileText, CheckCircle2, Bike, ArrowRight, ShieldCheck, Camera, Scan, Loader2, X, ChevronLeft, Search, Map } from 'lucide-react';
 import { Applicant } from '../types';
 import { parseIdCardImage } from '../services/gemini';
 
@@ -9,11 +9,18 @@ interface PublicApplicationProps {
   onBack: () => void;
 }
 
+const MAJOR_CITIES = [
+  '北京', '上海', '广州', '深圳', '成都', '杭州', '重庆', '武汉', '西安', '苏州', 
+  '天津', '南京', '郑州', '长沙', '东莞', '宁波', '佛山', '合肥', '济南', '青岛',
+  '沈阳', '大连', '昆明', '厦门', '长春', '福州', '无锡', '石家庄', '南宁', '南昌'
+];
+
 const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }) => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [isManualCity, setIsManualCity] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,7 +31,7 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
     contact: '',
     age: '',
     city: '北京',
-    station: '朝阳站点',
+    station: '默认站点',
     experience: ''
   });
 
@@ -115,8 +122,8 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
         <div className="w-24 h-24 bg-green-500 text-white rounded-full flex items-center justify-center mb-6 shadow-2xl shadow-green-200 animate-bounce">
           <CheckCircle2 size={56} />
         </div>
-        <h1 className="text-3xl font-black text-slate-900 mb-3">申请已提交!</h1>
-        <p className="text-slate-500 mb-10 max-w-xs leading-relaxed">您的资料已通过端口实时同步至 RiderHub 调度中心。请保持手机通讯畅通。</p>
+        <h1 className="text-3xl font-black text-slate-900 mb-3 text-center">申请已提交!</h1>
+        <p className="text-slate-500 mb-10 max-w-xs leading-relaxed text-center">您的资料已通过端口实时同步至 RiderHub 调度中心。请保持手机通讯畅通。</p>
         
         <div className="w-full max-w-xs space-y-4">
           <button onClick={onBack} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl shadow-slate-200 active:scale-95 transition-all">
@@ -142,7 +149,6 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
             
             <div className="flex-1 relative flex items-center justify-center">
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-              {/* Scan Mask */}
               <div className="absolute inset-0 flex flex-col">
                 <div className="bg-black/60 flex-1" />
                 <div className="flex h-64">
@@ -184,24 +190,24 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
               onClick={onBack}
               className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all active:scale-90 flex items-center gap-1 group"
             >
-              <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+              <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
               <span className="text-xs font-bold pr-1">退出</span>
             </button>
             <div className="flex items-center gap-1.5 px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-wider">
                <ShieldCheck size={12} /> 安全传输
             </div>
           </div>
-          <h1 className="text-3xl font-black mb-2">RiderHub 招募</h1>
-          <p className="text-blue-100 text-sm opacity-80">全国领先的智慧物流骑手平台</p>
+          <h1 className="text-3xl font-black mb-2 text-left">RiderHub 招募</h1>
+          <p className="text-blue-100 text-sm opacity-80 text-left">全国领先的智慧物流骑手平台</p>
           <div className="absolute -bottom-6 left-8 right-8 bg-white rounded-2xl p-4 shadow-xl flex justify-between items-center border border-slate-50">
             <div className="flex gap-1.5">
                {[1, 2].map(i => <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${step === i ? 'w-8 bg-blue-600' : 'w-2 bg-slate-200'}`} />)}
             </div>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">步骤 {step}/2</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">步骤 {step}/2</span>
           </div>
         </div>
 
-        <div className="flex-1 p-8 pt-14 flex flex-col">
+        <div className="flex-1 p-8 pt-14 flex flex-col overflow-y-auto">
           <form onSubmit={handleSubmit} className="flex-1 flex flex-col text-left">
             {step === 1 ? (
               <div className="space-y-6 animate-in slide-in-from-right-10 duration-300">
@@ -229,29 +235,82 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">手机号码</label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                      <input required type="tel" placeholder="11位手机号" className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-800" value={formData.contact} onChange={e => setFormData({...formData, contact: e.target.value})} />
+                      <input 
+                        required 
+                        type="tel" 
+                        placeholder="11位手机号" 
+                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-800 transition-all" 
+                        value={formData.contact} 
+                        onChange={e => setFormData({...formData, contact: e.target.value})} 
+                      />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 text-left">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">年龄</label>
                       <input required type="number" placeholder="您的年龄" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-800" value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">城市</label>
-                      <select className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-800 appearance-none" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})}>
-                        <option>北京</option><option>上海</option><option>深圳</option><option>杭州</option>
-                      </select>
+                      <div className="flex justify-between items-center px-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">城市</label>
+                        <button 
+                          type="button" 
+                          onClick={() => setIsManualCity(!isManualCity)}
+                          className="text-[9px] font-black text-blue-600 hover:underline flex items-center gap-1"
+                        >
+                          {isManualCity ? <Map size={10} /> : <Search size={10} />}
+                          {isManualCity ? '快速选择' : '手动输入'}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        {isManualCity ? (
+                          <div className="relative text-left">
+                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                            <input 
+                              required 
+                              type="text" 
+                              placeholder="例: 苏州市" 
+                              className="w-full pl-10 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-800 text-sm" 
+                              value={formData.city} 
+                              onChange={e => setFormData({...formData, city: e.target.value})} 
+                            />
+                          </div>
+                        ) : (
+                          <div className="relative text-left">
+                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
+                            <select 
+                              className="w-full pl-10 pr-8 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-800 appearance-none text-sm" 
+                              value={formData.city} 
+                              onChange={e => setFormData({...formData, city: e.target.value})}
+                            >
+                              {MAJOR_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                              <ArrowRight size={14} className="rotate-90" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <button type="button" onClick={() => setStep(2)} className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 flex items-center justify-center gap-2 mt-4 active:scale-95 transition-all">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    if(formData.name && formData.contact.length === 11 && formData.age) {
+                      setStep(2);
+                    } else {
+                      alert('请填写完整的姓名、11位手机号和年龄');
+                    }
+                  }} 
+                  className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 flex items-center justify-center gap-2 mt-4 active:scale-95 transition-all"
+                >
                   继续下一步 <ArrowRight size={20} />
                 </button>
               </div>
             ) : (
-              <div className="space-y-6 animate-in slide-in-from-right-10 duration-300 flex-1 flex flex-col">
+              <div className="space-y-6 animate-in slide-in-from-right-10 duration-300 flex-1 flex flex-col text-left">
                 <h2 className="text-xl font-black text-slate-900">入职意向确认</h2>
                 <div className="space-y-4 flex-1">
                   <div className="space-y-1.5">

@@ -4,13 +4,14 @@ import {
   Search, Battery, MapPin, Shield, Zap, 
   MoreHorizontal, Plus, X, ArrowRight, PackagePlus,
   Globe, Building2, ChevronRight, Edit3, Trash2, Save,
-  Lock, History, AlertTriangle, RotateCcw, Edit2, Check
+  Lock, History, AlertTriangle, RotateCcw, Edit2, Check, Hash
 } from 'lucide-react';
 
 interface Device {
   id: string;
   type: '电动车' | '换电电池';
-  code: string;
+  code: string; // 手动编号
+  vin?: string; // 大架号
   status: '正常' | '维修中' | '低电量' | '异常';
   batteryLevel?: number;
   rider: string;
@@ -41,6 +42,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
   const [newDevice, setNewDevice] = useState<Partial<Device>>({
     type: '电动车',
     code: '',
+    vin: '',
     location: '',
     status: '正常'
   });
@@ -100,6 +102,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
     const matchesCity = activeCity === '全部城市' || vCity === activeCity;
     const matchesStation = activeStation === '全部站点' || vStation === activeStation;
     const matchesSearch = d.code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         (d.vin && d.vin.toLowerCase().includes(searchQuery.toLowerCase())) ||
                          d.location.includes(searchQuery) ||
                          (d.rider && d.rider.includes(searchQuery));
 
@@ -146,6 +149,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
       id: 'D' + Date.now(),
       type: newDevice.type as '电动车' | '换电电池',
       code: newDevice.code!,
+      vin: newDevice.vin!,
       status: '正常',
       batteryLevel: newDevice.type === '换电电池' ? 100 : undefined,
       rider: '未分配',
@@ -154,7 +158,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
     };
     setDevices(prev => [device, ...prev]);
     setIsAddModalOpen(false);
-    setNewDevice({ type: '电动车', code: '', location: '', status: '正常' });
+    setNewDevice({ type: '电动车', code: '', vin: '', location: '', status: '正常' });
     onAction(`✅ 设备 ${device.code} 已成功入库`);
   };
 
@@ -394,7 +398,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text" 
-                placeholder="搜索资产编号、使用者或详细位置..." 
+                placeholder="搜索资产编号、大架号、使用者..." 
                 className="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm outline-none focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -424,7 +428,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
                         </div>
                         <div>
                           <p className="font-bold text-slate-900">{device.code}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase">{device.type}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">{device.vin || '无大架号'}</p>
                         </div>
                       </div>
                     </td>
@@ -496,7 +500,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
 
       {deviceToDelete && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-[2rem] w-full max-sm shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertTriangle size={32} />
             </div>
@@ -555,9 +559,15 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
                   <button type="button" onClick={() => setNewDevice({ ...newDevice, type: '换电电池' })} className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${newDevice.type === '换电电池' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>智能换电电池</button>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">资产编号</label>
-                <input required type="text" placeholder="例如: EV-A8822" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.code} onChange={e => setNewDevice({ ...newDevice, code: e.target.value.toUpperCase() })} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">手动编辑编号</label>
+                  <input required type="text" placeholder="例: EV-A8822" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.code} onChange={e => setNewDevice({ ...newDevice, code: e.target.value.toUpperCase() })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">大架号 (VIN)</label>
+                  <input type="text" placeholder="例: VIN987654" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.vin} onChange={e => setNewDevice({ ...newDevice, vin: e.target.value.toUpperCase() })} />
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">初始位置 (格式: 城市 站点 详情)</label>
@@ -586,9 +596,15 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
               <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={24} className="text-slate-400" /></button>
             </div>
             <form onSubmit={handleUpdateDevice} className="p-8 space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">资产编号 (锁定)</label>
-                <input readOnly type="text" className="w-full px-5 py-4 bg-slate-100 border-none rounded-2xl text-slate-500 font-black cursor-not-allowed" value={editingDevice.code} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">手动编辑编号</label>
+                  <input type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={editingDevice.code} onChange={e => setEditingDevice({ ...editingDevice, code: e.target.value.toUpperCase() })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">大架号 (VIN)</label>
+                  <input type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={editingDevice.vin} onChange={e => setEditingDevice({ ...editingDevice, vin: e.target.value.toUpperCase() })} />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

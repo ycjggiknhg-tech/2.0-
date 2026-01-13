@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { X, Bike, Zap, CheckCircle2, Search, ArrowRight, MapPin, Info, ArrowLeft, Edit3, Save, Building2, Globe, Edit2, Check } from 'lucide-react';
+import { X, Bike, Zap, CheckCircle2, Search, ArrowRight, MapPin, Info, ArrowLeft, Edit3, Save, Building2, Globe, Edit2, Check, Hash } from 'lucide-react';
 import { Applicant } from '../types';
 
 interface VehicleAssignmentViewProps {
@@ -37,6 +37,7 @@ const VehicleAssignmentView: React.FC<VehicleAssignmentViewProps> = ({ applicant
       const station = parts[1] || '其他站点';
       
       if (!stats[city]) stats[city] = [];
+      if (!stats[city].includes(station)) stats[station] = []; // 修复拼写逻辑
       if (!stats[city].includes(station)) stats[city].push(station);
     });
     return stats;
@@ -67,6 +68,7 @@ const VehicleAssignmentView: React.FC<VehicleAssignmentViewProps> = ({ applicant
     const matchesStation = activeStation === '全部站点' || vStation === activeStation;
     
     const matchesSearch = v.code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         (v.vin && v.vin.toLowerCase().includes(searchQuery.toLowerCase())) ||
                          v.location.includes(searchQuery) ||
                          (v.rider && v.rider.includes(searchQuery));
 
@@ -136,7 +138,7 @@ const VehicleAssignmentView: React.FC<VehicleAssignmentViewProps> = ({ applicant
         <div className="flex items-center gap-4">
           <div className="bg-blue-50 px-4 py-2 rounded-xl flex items-center gap-3 border border-blue-100">
             <Info size={16} className="text-blue-600" />
-            <p className="text-xs font-bold text-blue-700">重命名后回车保存。修改地理位置不会改变物理归属。</p>
+            <p className="text-xs font-bold text-blue-700">请优先检查车辆“大架号”与物理实物是否一致。</p>
           </div>
           <button onClick={onClose} className="p-3 text-slate-400 hover:bg-slate-50 rounded-full transition-all"><X size={24} /></button>
         </div>
@@ -288,7 +290,7 @@ const VehicleAssignmentView: React.FC<VehicleAssignmentViewProps> = ({ applicant
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input 
                 type="text" 
-                placeholder="搜索车牌、使用者..." 
+                placeholder="搜索编号、大架号..." 
                 className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs outline-none focus:ring-4 focus:ring-blue-50 transition-all font-bold"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -334,9 +336,14 @@ const VehicleAssignmentView: React.FC<VehicleAssignmentViewProps> = ({ applicant
                         <div className="space-y-1" onClick={e => e.stopPropagation()}>
                           <label className="text-[8px] font-black text-slate-400 uppercase">修改编号</label>
                           <input autoFocus className="w-full bg-white border-2 border-orange-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 focus:border-orange-400 outline-none" value={editForm.code} onChange={(e) => setEditForm({ ...editForm, code: e.target.value.toUpperCase() })} />
+                          <label className="text-[8px] font-black text-slate-400 uppercase mt-2 block">大架号 (VIN)</label>
+                          <input className="w-full bg-white border-2 border-orange-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:border-orange-400 outline-none" value={editForm.vin || ''} onChange={(e) => setEditForm({ ...editForm, vin: e.target.value.toUpperCase() })} />
                         </div>
                       ) : (
-                        <p className={`text-xl font-black tracking-tight ${isSelected ? 'text-white' : 'text-slate-900'}`}>{vehicle.code}</p>
+                        <div>
+                          <p className={`text-xl font-black tracking-tight ${isSelected ? 'text-white' : 'text-slate-900'}`}>{vehicle.code}</p>
+                          <p className={`text-[10px] font-bold ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>VIN: {vehicle.vin || '未录入'}</p>
+                        </div>
                       )}
 
                       {isEditing ? (
@@ -375,9 +382,12 @@ const VehicleAssignmentView: React.FC<VehicleAssignmentViewProps> = ({ applicant
               </div>
               <div className="h-px bg-white/10" />
               <div>
-                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">拟分配车辆</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">拟分配资产</p>
                 {selectedId ? (
-                  <div className="flex items-center gap-2 text-blue-400 animate-in slide-in-from-left-2"><Zap size={16} /><span className="font-black text-lg">{allVehicles.find(v => v.id === selectedId)?.code}</span></div>
+                  <div className="space-y-1 animate-in slide-in-from-left-2">
+                    <div className="flex items-center gap-2 text-blue-400"><Zap size={16} /><span className="font-black text-lg">{allVehicles.find(v => v.id === selectedId)?.code}</span></div>
+                    <div className="text-[10px] text-slate-500 flex items-center gap-1.5"><Hash size={12} /> VIN: {allVehicles.find(v => v.id === selectedId)?.vin || 'NA'}</div>
+                  </div>
                 ) : (
                   <p className="text-sm font-bold text-slate-600 italic">尚未选择车辆...</p>
                 )}
@@ -390,9 +400,9 @@ const VehicleAssignmentView: React.FC<VehicleAssignmentViewProps> = ({ applicant
             <div className="text-left space-y-4">
               <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">操作指引</h4>
               <p className="text-xs text-slate-500 leading-relaxed">
-                1. 点击区域名称旁边的编辑图标进行实时重命名。<br/>
-                2. 在车辆列表中点选可用资产。<br/>
-                3. 完成绑定后，数据将同步至骑手档案。
+                1. 确保拟分配车辆的“大架号”与线下实物一致。<br/>
+                2. 完成绑定后，资产编号与大架号将同步存入骑手档案。<br/>
+                3. 支持在职状态下随时更换资产。
               </p>
             </div>
             <div className="space-y-4">

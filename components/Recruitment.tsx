@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Search, Filter, MapPin, UserCheck, Trash2, 
   ChevronDown, X, QrCode, FileSpreadsheet, 
-  UserPlus, Phone, AlertCircle
+  UserPlus, Phone, AlertCircle, Users, CheckCircle2, XCircle, TrendingUp
 } from 'lucide-react';
 import { Applicant } from '../types';
 
@@ -25,6 +25,25 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
     return () => window.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // 计算今日各城市招募概览数据
+  const todaySummary = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const stats: Record<string, { total: number; passed: number; failed: number }> = {};
+
+    applicants.forEach(app => {
+      if (app.appliedDate === today) {
+        if (!stats[app.city]) {
+          stats[app.city] = { total: 0, passed: 0, failed: 0 };
+        }
+        stats[app.city].total += 1;
+        if (app.entryResult === 'passed') stats[app.city].passed += 1;
+        if (app.entryResult === 'failed') stats[app.city].failed += 1;
+      }
+    });
+
+    return stats;
+  }, [applicants]);
+
   const handleUpdateEntryResult = (id: string, result: 'passed' | 'failed' | 'pending') => {
     setApplicants(prev => prev.map(app => 
       app.id === id ? { 
@@ -44,11 +63,11 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
   };
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8 text-left">
+    <div className="p-8 text-left">
+      <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">站点招聘管理</h1>
-          <p className="text-slate-500 text-sm">所有数据已开启本地加密存储，刷新不丢失。</p>
+          <p className="text-slate-500 text-sm">实时监控各城市面试进度与入职转化效率。</p>
         </div>
         <div className="flex gap-3">
           <button onClick={() => setShowQRModal(true)} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 text-sm">
@@ -60,7 +79,64 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden min-h-[500px]">
+      {/* 今日招募看板 - 城市维度 */}
+      <div className="mb-10">
+        <header className="flex items-center gap-2 mb-4">
+          <TrendingUp size={16} className="text-blue-500" />
+          <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">今日招募实况看板 (City-Level Overview)</h2>
+        </header>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Object.keys(todaySummary).length > 0 ? (
+            Object.entries(todaySummary).map(([city, data]) => {
+              // Fix: Explicitly cast "data" from unknown to the expected stats type to resolve compilation errors
+              const summaryData = data as { total: number; passed: number; failed: number };
+              return (
+                <div key={city} className="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm hover:shadow-md transition-all group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                        <MapPin size={16} />
+                      </div>
+                      <span className="font-black text-slate-800 tracking-tight">{city}</span>
+                    </div>
+                    <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-0.5 rounded-lg">
+                      转化率 {summaryData.total > 0 ? Math.round((summaryData.passed / summaryData.total) * 100) : 0}%
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-left">
+                      <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">面试</p>
+                      <p className="text-lg font-black text-slate-800">{summaryData.total}</p>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[9px] font-black text-emerald-400 uppercase mb-0.5">通过</p>
+                      <p className="text-lg font-black text-emerald-600">{summaryData.passed}</p>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[9px] font-black text-rose-400 uppercase mb-0.5">淘汰</p>
+                      <p className="text-lg font-black text-rose-600">{summaryData.failed}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 h-1 w-full bg-slate-50 rounded-full overflow-hidden flex">
+                    <div className="bg-emerald-500 h-full transition-all" style={{ width: `${(summaryData.passed / summaryData.total) * 100}%` }} />
+                    <div className="bg-rose-400 h-full transition-all" style={{ width: `${(summaryData.failed / summaryData.total) * 100}%` }} />
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="col-span-full py-12 bg-white rounded-[2.5rem] border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
+               <Users size={32} className="opacity-10 mb-2" />
+               <p className="text-xs font-bold uppercase tracking-widest italic">今日暂无城市面试记录</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden min-h-[500px]">
         <div className="p-4 border-b border-slate-100 flex gap-4 bg-slate-50/50 text-left">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -140,7 +216,6 @@ const Recruitment: React.FC<RecruitmentProps> = ({ onAction, applicants, setAppl
                         <button 
                           onClick={(e) => { 
                             e.stopPropagation(); 
-                            // 核心逻辑修复：拦截非通过状态的入职操作
                             if (applicant.entryResult !== 'passed') {
                               onAction('⚠️ 请先将面试结论修改为“通过”再办理入职');
                               return;

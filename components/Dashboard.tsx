@@ -1,45 +1,45 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area 
-} from 'recharts';
-import { 
-  TrendingUp, Users, CheckCircle, MapPin, Award
+  Users, Award, Package, TrendingUp, ChevronRight
 } from 'lucide-react';
 import { NavigationState, Rider } from '../types';
 
-const StatCard = ({ title, value, change, icon: Icon, color, onClick, subValue }: any) => (
-  <div 
-    onClick={onClick}
-    className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:border-blue-500/30 hover:shadow-lg transition-all active:scale-[0.98] group text-left"
-  >
-    <div className="flex justify-between items-start mb-4">
-      <div className={`p-2 rounded-lg bg-${color}-50 text-${color}-600 group-hover:scale-110 transition-transform`}>
-        <Icon size={24} />
-      </div>
-      {change && (
-        <span className={`text-xs font-medium px-2 py-1 rounded-full ${change.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-          {change}
-        </span>
-      )}
-    </div>
-    <h3 className="text-slate-500 text-sm font-medium">{title}</h3>
-    <div className="flex items-baseline gap-2">
-      <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
-      {subValue && <span className="text-[10px] font-black text-blue-600 uppercase tracking-tight">{subValue}</span>}
-    </div>
-  </div>
-);
+const StatCard = ({ title, value, change, icon: Icon, color, onClick, subValue }: any) => {
+  const colorMap: any = {
+    blue: "from-blue-500 to-indigo-500 shadow-blue-100 text-blue-600 bg-blue-50",
+    indigo: "from-indigo-500 to-violet-500 shadow-indigo-100 text-indigo-600 bg-indigo-50",
+    purple: "from-purple-500 to-fuchsia-500 shadow-purple-100 text-purple-600 bg-purple-50",
+  };
 
-const data = [
-  { name: '周一', active: 400, completed: 240 },
-  { name: '周二', active: 300, completed: 139 },
-  { name: '周三', active: 200, completed: 980 },
-  { name: '周四', active: 278, completed: 390 },
-  { name: '周五', active: 189, completed: 480 },
-  { name: '周六', active: 239, completed: 380 },
-  { name: '周日', active: 349, completed: 430 },
-];
+  const style = colorMap[color] || colorMap.blue;
+
+  return (
+    <div 
+      onClick={onClick}
+      className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-white hover:border-blue-200 hover:shadow-[0_20px_40px_rgba(59,130,246,0.05)] transition-all active:scale-[0.98] group text-left relative overflow-hidden"
+    >
+      <div className="flex justify-between items-start mb-6">
+        <div className={`p-3.5 rounded-2xl ${style.split(' ').slice(3).join(' ')} group-hover:scale-110 transition-transform`}>
+          <Icon size={24} />
+        </div>
+        {change && (
+          <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${change.startsWith('+') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+            {change}
+          </span>
+        )}
+      </div>
+      <h3 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">{title}</h3>
+      <div className="flex items-baseline gap-2">
+        <p className="text-4xl font-black text-slate-800 tracking-tighter">{value}</p>
+        {subValue && <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter opacity-70">{subValue}</span>}
+      </div>
+      
+      {/* 背景装饰球 */}
+      <div className={`absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-5 blur-2xl ${style.split(' ').slice(3).join(' ')}`} />
+    </div>
+  );
+};
 
 interface DashboardProps {
   onNavigate: (view: NavigationState['view']) => void;
@@ -47,83 +47,89 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate, riders }) => {
-  // 计算达标人数（入职超过30天）
-  const calculateQualifiedRiders = () => {
+  const qualifiedCount = useMemo(() => {
     const today = new Date();
-    const qualified = riders.filter(rider => {
+    return riders.filter(rider => {
       const joinDate = new Date(rider.joinDate);
       const diffTime = Math.abs(today.getTime() - joinDate.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays >= 30;
-    });
-    return qualified.length;
-  };
+    }).length;
+  }, [riders]);
 
-  const qualifiedCount = calculateQualifiedRiders();
+  const totalDeliveries = useMemo(() => {
+    return riders.reduce((acc, curr) => acc + (curr.deliveries || 0), 0);
+  }, [riders]);
+
   const estimatedBonus = qualifiedCount * 3000;
 
   return (
-    <div className="p-8">
-      <header className="mb-8 text-left">
-        <h1 className="text-2xl font-bold text-slate-900">骑手概览</h1>
-        <p className="text-slate-500">实时运营指标与运力状态监控。</p>
+    <div className="p-10 max-w-7xl mx-auto">
+      <header className="mb-12 text-left">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
+          <TrendingUp size={12} /> 实时运营分析
+        </div>
+        <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">站点管理概览</h1>
+        <p className="text-slate-400 font-medium">查看核心指标快照，管理您的骑手运力团队。</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard title="在职骑手人数" value={riders.length.toLocaleString()} change="+12%" icon={Users} color="blue" onClick={() => onNavigate('riders')} />
+      {/* 核心指标卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
         <StatCard 
-          title="骑手达标人数" 
+          title="在职骑手人数" 
+          value={riders.length.toLocaleString()} 
+          change="+12.5%" 
+          icon={Users} 
+          color="blue" 
+          onClick={() => onNavigate('riders')} 
+        />
+        <StatCard 
+          title="全量配送总单量" 
+          value={totalDeliveries.toLocaleString()} 
+          change="+18.4%" 
+          icon={Package} 
+          color="indigo" 
+          onClick={() => onNavigate('riders')} 
+        />
+        <StatCard 
+          title="骑手留存达标" 
           value={qualifiedCount} 
           subValue={`预计返点: ¥${(estimatedBonus/10000).toFixed(1)}W`} 
           icon={Award} 
           color="purple" 
           onClick={() => onNavigate('riders')} 
         />
-        <StatCard title="当前在线" value="842" change="+4.5%" icon={TrendingUp} color="green" onClick={() => onNavigate('riders')} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-            <CheckCircle size={20} className="text-blue-600" />
-            配送单量表现
-          </h2>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
-                <defs>
-                  <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <Tooltip />
-                <Area type="monotone" dataKey="active" stroke="#2563eb" fillOpacity={1} fill="url(#colorActive)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+      {/* 底部功能性引导 - 使用非常柔和的马卡龙渐变 */}
+      <div className="bg-gradient-to-br from-[#f8faff] to-[#eef2ff] rounded-[3rem] p-16 flex flex-col items-start justify-center text-left relative overflow-hidden border border-white shadow-[0_20px_50px_rgba(59,130,246,0.03)]">
+        <div className="relative z-10 max-w-2xl">
+          <h3 className="text-4xl font-black text-slate-800 mb-6 tracking-tight leading-tight">
+            全链路数字化<br/>骑手资产管理
+          </h3>
+          <p className="text-slate-500 text-xl mb-10 leading-relaxed max-w-lg">
+            从面试评审、背景调查到车辆资产动态绑定。RiderHub 致力于通过 AI 驱动的技术栈，降低您的运营损耗，提升人均出单效能。
+          </p>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => onNavigate('recruitment')}
+              className="px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-500/20 flex items-center gap-2"
+            >
+              处理面试申请 <ChevronRight size={18} />
+            </button>
+            <button 
+              onClick={() => onNavigate('riders')}
+              className="px-10 py-5 bg-white text-slate-600 border border-slate-100 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+            >
+              查看在职档案
+            </button>
           </div>
         </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-            <MapPin size={20} className="text-blue-600" />
-            区域运力分布
-          </h2>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <Tooltip />
-                <Bar dataKey="completed" fill="#10b981" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        
+        {/* 装饰性背景 */}
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-500/5 to-transparent pointer-events-none" />
+        <div className="absolute -right-20 -top-20 w-[400px] h-[400px] bg-white rounded-full blur-[80px] opacity-60" />
+        <div className="absolute left-[60%] top-[40%] w-[300px] h-[300px] bg-indigo-100 rounded-full blur-[100px] opacity-40" />
       </div>
     </div>
   );

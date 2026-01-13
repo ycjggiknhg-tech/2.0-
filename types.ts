@@ -39,12 +39,17 @@ export interface Rider {
   contact: string;
   email: string;
   vehicleType: string;
-  licensePlate?: string;
+  licensePlate?: string; // 对应设备手动编号
+  vin?: string; // 新增：车辆大架号
   emergencyContact?: string;
   activityHistory: RiderActivity[];
   recentFeedback: RiderFeedback[];
   idCardImage?: string; 
   contractImage?: string; 
+  // 财务结算相关字段
+  clientCompany?: string; // 甲方公司 (结算单位)
+  settlementAmount?: number; // 约定的返费金额
+  settlementStatus?: 'pending' | 'qualified' | 'processing' | 'settled'; // 结算状态
 }
 
 export interface Staff {
@@ -99,6 +104,6 @@ export interface JobPost {
 export type AppPort = 'admin' | 'applicant-portal';
 
 export interface NavigationState {
-  view: 'dashboard' | 'recruitment' | 'riders' | 'jobs' | 'messages' | 'settings' | 'devices' | 'vehicle-assignment';
+  view: 'dashboard' | 'recruitment' | 'riders' | 'jobs' | 'messages' | 'settings' | 'devices' | 'vehicle-assignment' | 'finance';
   port: AppPort;
 }
