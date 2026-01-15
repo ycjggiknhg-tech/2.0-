@@ -4,20 +4,9 @@ import {
   Search, Battery, MapPin, Shield, Zap, 
   MoreHorizontal, Plus, X, ArrowRight, PackagePlus,
   Globe, Building2, ChevronRight, Edit3, Trash2, Save,
-  Lock, History, AlertTriangle, RotateCcw, Edit2, Check, Hash
+  Lock, History, AlertTriangle, RotateCcw, Edit2, Check, Hash, User
 } from 'lucide-react';
-
-interface Device {
-  id: string;
-  type: '电动车' | '换电电池';
-  code: string; // 手动编号
-  vin?: string; // 大架号
-  status: '正常' | '维修中' | '低电量' | '异常';
-  batteryLevel?: number;
-  rider: string;
-  lastSync: string;
-  location: string;
-}
+import { Device } from '../types';
 
 interface DeviceManagementProps {
   devices: Device[];
@@ -43,6 +32,10 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
     type: '电动车',
     code: '',
     vin: '',
+    brand: '',
+    color: '',
+    city: '北京',
+    station: '默认站点',
     location: '',
     status: '正常'
   });
@@ -82,10 +75,8 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
   const locationStats = useMemo(() => {
     const stats: Record<string, string[]> = {};
     devices.forEach(v => {
-      const parts = (v.location || '').trim().split(/\s+/);
-      const city = parts[0] || '未知区域';
-      const station = parts[1] || '其他站点';
-      
+      const city = v.city || '未知区域';
+      const station = v.station || '其他站点';
       if (!stats[city]) stats[city] = [];
       if (!stats[city].includes(station)) stats[city].push(station);
     });
@@ -95,16 +86,14 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
   const citiesList = Object.keys(locationStats);
 
   const filteredDevices = devices.filter(d => {
-    const parts = (d.location || '').trim().split(/\s+/);
-    const vCity = parts[0] || '未知区域';
-    const vStation = parts[1] || '其他站点';
-    
-    const matchesCity = activeCity === '全部城市' || vCity === activeCity;
-    const matchesStation = activeStation === '全部站点' || vStation === activeStation;
-    const matchesSearch = d.code.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         (d.vin && d.vin.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                         d.location.includes(searchQuery) ||
-                         (d.rider && d.rider.includes(searchQuery));
+    const matchesCity = activeCity === '全部城市' || d.city === activeCity;
+    const matchesStation = activeStation === '全部站点' || d.station === activeStation;
+    const matchesSearch = 
+      d.code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (d.vin && d.vin.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (d.brand && d.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      d.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (d.rider && d.rider.includes(searchQuery));
 
     return matchesCity && matchesStation && matchesSearch;
   });
@@ -120,14 +109,11 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
     }
 
     const updatedDevices = devices.map(d => {
-      const parts = (d.location || '').trim().split(/\s+/);
-      if (type === 'city' && parts[0] === oldValue) {
-        parts[0] = trimmedNew;
-        return { ...d, location: parts.join(' ') };
+      if (type === 'city' && d.city === oldValue) {
+        return { ...d, city: trimmedNew };
       }
-      if (type === 'station' && parts[0] === cityContext && (parts[1] === oldValue || (!parts[1] && oldValue === '其他站点'))) {
-        parts[1] = trimmedNew;
-        return { ...d, location: parts.join(' ') };
+      if (type === 'station' && d.city === cityContext && d.station === oldValue) {
+        return { ...d, station: trimmedNew };
       }
       return d;
     });
@@ -141,8 +127,8 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
 
   const handleAddDevice = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newDevice.code || !newDevice.location) {
-      onAction('⚠️ 请填写完整的设备编号和存放位置');
+    if (!newDevice.code || !newDevice.location || !newDevice.city || !newDevice.station) {
+      onAction('⚠️ 请填写完整的资产信息');
       return;
     }
     const device: Device = {
@@ -150,6 +136,10 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
       type: newDevice.type as '电动车' | '换电电池',
       code: newDevice.code!,
       vin: newDevice.vin!,
+      brand: newDevice.brand || '未知品牌',
+      color: newDevice.color || '默认色',
+      city: newDevice.city!,
+      station: newDevice.station!,
       status: '正常',
       batteryLevel: newDevice.type === '换电电池' ? 100 : undefined,
       rider: '未分配',
@@ -158,7 +148,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
     };
     setDevices(prev => [device, ...prev]);
     setIsAddModalOpen(false);
-    setNewDevice({ type: '电动车', code: '', vin: '', location: '', status: '正常' });
+    setNewDevice({ type: '电动车', code: '', vin: '', brand: '', color: '', city: '北京', station: '默认站点', location: '', status: '正常' });
     onAction(`✅ 设备 ${device.code} 已成功入库`);
   };
 
@@ -211,7 +201,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
       <div className="flex justify-between items-center mb-8 text-left">
         <div className="text-left">
           <h1 className="text-2xl font-bold text-slate-900">资产与设备管理</h1>
-          <p className="text-slate-500">实时监控车辆轨迹、电池电量及硬件健康状况。</p>
+          <p className="text-slate-500">实时监控车辆品牌、大架号、编号及绑定骑手信息。</p>
         </div>
         <button 
           type="button"
@@ -398,7 +388,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text" 
-                placeholder="搜索资产编号、大架号、使用者..." 
+                placeholder="搜索代码、大架号、品牌、编号、骑手..." 
                 className="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm outline-none focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -407,14 +397,15 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
           </div>
 
           <div className="overflow-x-auto text-left">
-            <table className="w-full min-w-[1000px]">
+            <table className="w-full min-w-[1200px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                  <th className="px-8 py-5">资产识别</th>
+                  <th className="px-8 py-5">资产识别 (代码/品牌)</th>
+                  <th className="px-8 py-5">车辆大架号 (VIN)</th>
                   <th className="px-8 py-5">实时状态</th>
-                  <th className="px-8 py-5">电量/健康</th>
-                  <th className="px-8 py-5">当前骑手</th>
-                  <th className="px-8 py-5">地理位置</th>
+                  <th className="px-8 py-5">归属区域</th>
+                  <th className="px-8 py-5">绑定骑手</th>
+                  <th className="px-8 py-5">车辆编号 (内部)</th>
                   <th className="px-8 py-5 text-right">操作</th>
                 </tr>
               </thead>
@@ -428,9 +419,16 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
                         </div>
                         <div>
                           <p className="font-bold text-slate-900">{device.code}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase">{device.vin || '无大架号'}</p>
+                          <div className="flex items-center gap-1.5">
+                             <span className="text-[10px] text-blue-500 font-black uppercase tracking-tighter">{device.brand}</span>
+                             <span className="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
+                             <span className="text-[10px] text-slate-400 font-bold">{device.color}</span>
+                          </div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-8 py-5 font-mono text-[11px] font-bold text-slate-600 tracking-tight">
+                      {device.vin || '无大架号'}
                     </td>
                     <td className="px-8 py-5">
                       <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase border ${
@@ -441,24 +439,21 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
                       </span>
                     </td>
                     <td className="px-8 py-5">
-                      {device.batteryLevel !== undefined ? (
-                        <div className="w-24">
-                          <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
-                            <span>{device.batteryLevel}%</span>
-                          </div>
-                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-green-500 transition-all" style={{ width: `${device.batteryLevel}%` }} />
-                          </div>
-                        </div>
-                      ) : <span className="text-xs font-bold text-green-600 flex items-center gap-1"><Shield size={14} /> 优</span>}
+                       <div>
+                         <p className="text-xs font-bold text-slate-800">{device.city}</p>
+                         <p className="text-[9px] text-slate-400 uppercase font-black">{device.station}</p>
+                       </div>
                     </td>
                     <td className="px-8 py-5">
-                      <p className={`text-sm font-bold ${device.rider === '未分配' ? 'text-slate-300 italic' : 'text-slate-800'}`}>{device.rider}</p>
+                      <div className="flex items-center gap-2">
+                        <User size={14} className={device.rider === '未分配' ? 'text-slate-300' : 'text-blue-500'} />
+                        <p className={`text-sm font-bold ${device.rider === '未分配' ? 'text-slate-300 italic' : 'text-slate-800'}`}>{device.rider}</p>
+                      </div>
                       <p className="text-[10px] text-slate-400 font-bold">{device.lastSync}</p>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-                        <MapPin size={14} className="text-slate-400" /> {device.location}
+                        <Hash size={14} className="text-slate-400" /> {device.location}
                       </div>
                     </td>
                     <td className="px-8 py-5 text-right relative">
@@ -474,7 +469,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
                           <div className="fixed inset-0 z-40" onClick={() => setActiveActionMenuId(null)} />
                           <div className="absolute right-8 mt-1 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 p-1.5 space-y-0.5 text-left animate-in fade-in zoom-in-95 duration-100">
                             <button onClick={(e) => handleEditClick(e, device)} className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 rounded-xl transition-colors">
-                              <Edit3 size={16} /> 修正基本资料
+                              <Edit3 size={16} /> 修正车辆详情
                             </button>
                             <button onClick={(e) => { e.stopPropagation(); onAction('锁车指令已发送'); setActiveActionMenuId(null); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
                               <Lock size={16} /> 远程紧急锁车
@@ -551,7 +546,7 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
               </div>
               <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={24} className="text-slate-400" /></button>
             </div>
-            <form onSubmit={handleAddDevice} className="p-8 space-y-6">
+            <form onSubmit={handleAddDevice} className="p-8 space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">设备类型</label>
                 <div className="flex p-1 bg-slate-100 rounded-2xl gap-1">
@@ -559,20 +554,45 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
                   <button type="button" onClick={() => setNewDevice({ ...newDevice, type: '换电电池' })} className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${newDevice.type === '换电电池' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>智能换电电池</button>
                 </div>
               </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">手动编辑编号</label>
-                  <input required type="text" placeholder="例: EV-A8822" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.code} onChange={e => setNewDevice({ ...newDevice, code: e.target.value.toUpperCase() })} />
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">所属城市</label>
+                  <input required type="text" placeholder="例: 北京" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.city} onChange={e => setNewDevice({ ...newDevice, city: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">大架号 (VIN)</label>
-                  <input type="text" placeholder="例: VIN987654" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.vin} onChange={e => setNewDevice({ ...newDevice, vin: e.target.value.toUpperCase() })} />
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">所属站点</label>
+                  <input required type="text" placeholder="例: 三里屯站" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.station} onChange={e => setNewDevice({ ...newDevice, station: e.target.value })} />
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">初始位置 (格式: 城市 站点 详情)</label>
-                <input required type="text" placeholder="例如: 上海 静安寺站 1号仓库" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.location} onChange={e => setNewDevice({ ...newDevice, location: e.target.value })} />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">车辆品牌</label>
+                  <input type="text" placeholder="例: 雅迪 / 九号" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.brand} onChange={e => setNewDevice({ ...newDevice, brand: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">车辆颜色</label>
+                  <input type="text" placeholder="例: 珍珠白" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.color} onChange={e => setNewDevice({ ...newDevice, color: e.target.value })} />
+                </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">资产代码</label>
+                  <input required type="text" placeholder="例: EV-8822" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.code} onChange={e => setNewDevice({ ...newDevice, code: e.target.value.toUpperCase() })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">车辆编号 (内部编号)</label>
+                  <input required type="text" placeholder="例: 001-A" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.location} onChange={e => setNewDevice({ ...newDevice, location: e.target.value })} />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">大架号 (VIN)</label>
+                <input type="text" placeholder="例: VIN987654" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={newDevice.vin} onChange={e => setNewDevice({ ...newDevice, vin: e.target.value.toUpperCase() })} />
+              </div>
+
               <div className="pt-4 flex gap-4">
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 transition-all active:scale-95">取消</button>
                 <button type="submit" className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95">确认入库上线 <ArrowRight size={18} className="inline ml-1" /></button>
@@ -595,35 +615,30 @@ const DeviceManagement: React.FC<DeviceManagementProps> = ({ devices, setDevices
               </div>
               <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={24} className="text-slate-400" /></button>
             </div>
-            <form onSubmit={handleUpdateDevice} className="p-8 space-y-6">
+            <form onSubmit={handleUpdateDevice} className="p-8 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">手动编辑编号</label>
-                  <input type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={editingDevice.code} onChange={e => setEditingDevice({ ...editingDevice, code: e.target.value.toUpperCase() })} />
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">品牌</label>
+                  <input type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none font-bold text-slate-800" value={editingDevice.brand} onChange={e => setEditingDevice({ ...editingDevice, brand: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">大架号 (VIN)</label>
-                  <input type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" value={editingDevice.vin} onChange={e => setEditingDevice({ ...editingDevice, vin: e.target.value.toUpperCase() })} />
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">颜色</label>
+                  <input type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none font-bold text-slate-800" value={editingDevice.color} onChange={e => setEditingDevice({ ...editingDevice, color: e.target.value })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">运维状态</label>
-                  <select className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl outline-none font-bold text-slate-800 appearance-none" value={editingDevice.status} onChange={e => setEditingDevice({ ...editingDevice, status: e.target.value as any })}>
-                    <option value="正常">正常运营</option>
-                    <option value="维修中">故障待维</option>
-                    <option value="低电量">电量预警</option>
-                    <option value="异常">违规异常</option>
-                  </select>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">资产代码</label>
+                  <input type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none font-bold text-slate-800" value={editingDevice.code} onChange={e => setEditingDevice({ ...editingDevice, code: e.target.value.toUpperCase() })} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">当前责任骑手</label>
-                  <input type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none font-bold text-slate-800" value={editingDevice.rider} onChange={e => setEditingDevice({ ...editingDevice, rider: e.target.value })} />
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">车辆编号</label>
+                  <input required type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none font-bold text-slate-800" value={editingDevice.location} onChange={e => setEditingDevice({ ...editingDevice, location: e.target.value })} />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">精确定位信息</label>
-                <input required type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none font-bold text-slate-800" value={editingDevice.location} onChange={e => setEditingDevice({ ...editingDevice, location: e.target.value })} />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">大架号 (VIN)</label>
+                <input type="text" className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none font-bold text-slate-800" value={editingDevice.vin} onChange={e => setEditingDevice({ ...editingDevice, vin: e.target.value.toUpperCase() })} />
               </div>
               <div className="pt-4 flex gap-4">
                 <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 transition-all active:scale-95">放弃变更</button>

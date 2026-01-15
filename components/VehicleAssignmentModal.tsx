@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Bike, Zap, CheckCircle2, Search, ArrowRight, ShieldCheck, MapPin } from 'lucide-react';
+import { X, Bike, Zap, CheckCircle2, Search, ArrowRight, ShieldCheck, MapPin, Hash } from 'lucide-react';
 import { Applicant } from '../types';
 
 interface VehicleAssignmentModalProps {
@@ -75,7 +75,7 @@ const VehicleAssignmentModal: React.FC<VehicleAssignmentModalProps> = ({ applica
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredVehicles.length === 0 ? (
                 <div className="col-span-2 py-12 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                  <p className="text-xs font-bold text-slate-400">当前站点仓库暂无可用车辆</p>
+                  <p className="text-xs font-bold text-slate-400">当前站点暂无可用车辆</p>
                 </div>
               ) : (
                 filteredVehicles.map(vehicle => (
@@ -99,7 +99,7 @@ const VehicleAssignmentModal: React.FC<VehicleAssignmentModalProps> = ({ applica
                     <div className="relative z-10">
                       <p className="font-black text-slate-900 text-lg tracking-tight">{vehicle.code}</p>
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 mt-0.5">
-                        <MapPin size={12} /> {vehicle.location}
+                        <Hash size={12} /> 车辆编号: {vehicle.location}
                       </div>
                     </div>
                     {/* Visual decoration */}
