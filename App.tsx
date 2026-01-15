@@ -30,7 +30,7 @@ const INITIAL_STAFF: Staff[] = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Wang', 
     gender: '男',
     age: 34,
-    role: StaffRole.STATION_MANAGER, 
+    role: StaffRole.MANAGER, 
     employeeId: 'M001', 
     city: '北京', 
     station: '朝阳三里屯站', 

@@ -5,11 +5,9 @@ export enum RiderStatus {
 }
 
 export enum StaffRole {
-  HR = '人力资源',
-  STATION_MANAGER = '站长',
-  DISPATCHER = '调度员',
-  OPERATIONS = '运营专员',
-  AREA_MANAGER = '区域经理'
+  STAFF = '员工',
+  TEAM_LEADER = '组长',
+  MANAGER = '部门经理'
 }
 
 export interface RiderActivity {
