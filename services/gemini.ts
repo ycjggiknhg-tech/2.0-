@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const getAIAnalysis = async (applicantData: any) => {
@@ -27,7 +28,8 @@ export const getAIAnalysis = async (applicantData: any) => {
 export const chatWithAIConsultant = async (history: { role: string, parts: { text: string }[] }[], message: string) => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const chat = ai.chats.create({
-    model: 'gemini-3-flash-preview',
+    // Upgrade: Using gemini-3-pro-preview for complex logistics reasoning and decision support
+    model: 'gemini-3-pro-preview',
     history: history,
     config: {
       systemInstruction: '你是一位精通末端配送和灵活用工物流的人力资源与运营专家。你负责帮助车队经理优化骑手团队、招聘策略以及提升运营效率。请始终使用中文回答。',

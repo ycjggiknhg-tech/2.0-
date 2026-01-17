@@ -1,15 +1,8 @@
 
 import React from 'react';
 import { 
-  LayoutDashboard, 
-  Users, 
-  UserPlus, 
-  Settings, 
-  Bike,
-  Briefcase,
-  MessageSquare,
-  Zap,
-  WalletCards
+  LayoutDashboard, Users, UserPlus, Settings, Bike, 
+  Briefcase, MessageSquare, Zap, WalletCards
 } from 'lucide-react';
 import { NavigationState } from '../types';
 
@@ -21,26 +14,26 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessages = 0 }) => {
   const menuItems = [
-    { id: 'dashboard', label: '控制概览', icon: LayoutDashboard, color: 'blue' },
-    { id: 'recruitment', label: '站点招聘', icon: UserPlus, color: 'indigo' },
-    { id: 'riders', label: '骑手管理', icon: Users, color: 'purple' },
-    { id: 'devices', label: '财产管理', icon: Zap, color: 'amber' },
-    { id: 'jobs', label: '人资团队', icon: Briefcase, color: 'emerald' },
-    { id: 'finance', label: '财务结算', icon: WalletCards, color: 'emerald' }, // 移动到信息中心上方
-    { id: 'messages', label: '信息中心', icon: MessageSquare, badge: unreadMessages, color: 'pink' },
-    { id: 'settings', label: '系统设置', icon: Settings, color: 'slate' },
+    { id: 'dashboard', label: '概览', icon: LayoutDashboard },
+    { id: 'recruitment', label: '招聘', icon: UserPlus },
+    { id: 'riders', label: '骑手', icon: Users },
+    { id: 'devices', label: '资产', icon: Zap },
+    { id: 'finance', label: '财务', icon: WalletCards },
+    { id: 'messages', label: '信息', icon: MessageSquare, badge: unreadMessages },
+    { id: 'jobs', label: '团队', icon: Briefcase },
+    { id: 'settings', label: '设置', icon: Settings },
   ];
 
   return (
-    <div className="w-64 bg-[#fcfdfe]/80 backdrop-blur-xl h-full flex flex-col flex-shrink-0 border-r border-blue-50 relative z-50">
-      <div className="p-8 flex items-center gap-3">
-        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl shadow-lg shadow-blue-200/50">
-          <Bike className="text-white" size={24} />
+    <div className="w-64 bg-white h-full flex flex-col shrink-0 border-r border-[#f5f5f7] relative z-50">
+      <div className="p-10 flex items-center gap-3">
+        <div className="bg-[#0071e3] p-2.5 rounded-xl shadow-lg shadow-[#0071e3]/20">
+          <Bike className="text-white" size={20} />
         </div>
-        <h1 className="text-slate-800 font-black text-xl tracking-tight text-left">RiderHub</h1>
+        <h1 className="text-[#1d1d1f] font-bold text-xl tracking-tighter">RiderHub</h1>
       </div>
       
-      <nav className="flex-1 px-4 mt-2 overflow-y-auto">
+      <nav className="flex-1 px-4 mt-6">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
@@ -48,18 +41,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessag
             <button
               key={item.id}
               onClick={() => onNavigate(item.id as NavigationState['view'])}
-              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all mb-1.5 relative group ${
+              className={`w-full flex items-center gap-4 px-5 py-3 rounded-2xl transition-all duration-300 mb-1 group ${
                 isActive 
-                  ? 'bg-white text-blue-600 font-bold shadow-sm ring-1 ring-blue-50' 
-                  : 'text-slate-500 hover:bg-white/60 hover:text-slate-900'
+                  ? 'bg-[#f5f5f7] text-[#0071e3] font-bold' 
+                  : 'text-[#86868b] hover:text-[#1d1d1f] hover:bg-[#f5f5f7]/50'
               }`}
             >
-              <div className={`p-1.5 rounded-lg transition-colors ${isActive ? 'bg-blue-50 text-blue-600' : 'bg-slate-100/50 text-slate-400 group-hover:bg-slate-100'}`}>
-                <Icon size={18} />
-              </div>
-              <span className="flex-1 text-left text-[13px] tracking-tight">{item.label}</span>
+              <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="flex-1 text-left text-sm tracking-tight">{item.label}</span>
               {item.badge && item.badge > 0 && (
-                <span className="bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
+                <span className="bg-[#ff3b30] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
                   {item.badge}
                 </span>
               )}
@@ -68,19 +59,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, unreadMessag
         })}
       </nav>
 
-      <div className="p-6">
-        <div className="flex items-center gap-3 p-3 bg-white/50 border border-white rounded-2xl shadow-sm">
-          <div className="relative">
-            <img 
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=SuperAdmin" 
-              className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100"
-              alt="User"
-            />
-            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-          </div>
+      <div className="p-8 border-t border-[#f5f5f7]">
+        <div className="flex items-center gap-4 p-2 hover:bg-[#f5f5f7] rounded-2xl transition-colors cursor-pointer group">
+          <img 
+            src="https://api.dicebear.com/7.x/avataaars/svg?seed=SuperAdmin" 
+            className="w-10 h-10 rounded-full bg-[#f5f5f7]"
+            alt="User"
+          />
           <div className="text-left overflow-hidden">
-            <p className="text-slate-800 text-xs font-bold truncate">运营主管</p>
-            <p className="text-slate-400 text-[9px] font-black truncate uppercase tracking-widest opacity-70">Administrator</p>
+            <p className="text-[#1d1d1f] text-xs font-bold truncate group-hover:text-[#0071e3] transition-colors">王主管</p>
+            <p className="text-[#86868b] text-[10px] truncate uppercase font-bold tracking-widest">Admin</p>
           </div>
         </div>
       </div>

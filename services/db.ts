@@ -22,11 +22,11 @@ export const db = {
     const applicants = db.getApplicants();
     const updated = applicants.map(app => {
       if (app.id === id) {
-        // Fix: Explicitly cast the returned object to Applicant to prevent string widening of the 'status' property
+        // Fix: Updated status values to match the Applicant status union type and cast explicitly
         return {
           ...app,
           entryResult: result,
-          status: result === 'passed' ? '已发录用' : result === 'failed' ? '已拒绝' : '待处理'
+          status: result === 'passed' ? '面试通过' : result === 'failed' ? '已拒绝' : '待处理'
         } as Applicant;
       }
       return app;
@@ -39,19 +39,20 @@ export const db = {
   processVehicleBinding: (applicant: Applicant): { riders: Rider[], applicants: Applicant[] } => {
     const riders = JSON.parse(localStorage.getItem(STORAGE_KEY_RIDERS) || '[]');
     
+    // Fix: Removed 'deliveries' property which does not exist in Rider type and mapped image fields correctly
     const newRider: Rider = {
       id: 'R' + applicant.id + Date.now().toString().slice(-4),
       name: applicant.name,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${applicant.name}`,
       status: RiderStatus.ACTIVE,
       rating: 5.0,
-      deliveries: 0,
       joinDate: new Date().toISOString().split('T')[0],
       region: applicant.city,
       station: applicant.station,
       contact: applicant.contact,
       email: `${applicant.name}@riderhub.cn`,
       vehicleType: '已分配电动车',
+      // Fix: Mapped image fields from Applicant (now correctly defined in types.ts)
       idCardImage: applicant.idCardImage,
       contractImage: applicant.contractImage,
       activityHistory: [],

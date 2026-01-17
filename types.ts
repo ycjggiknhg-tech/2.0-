@@ -10,9 +10,14 @@ export enum StaffRole {
   MANAGER = '部门经理'
 }
 
+export interface Station {
+  id: string;
+  name: string;
+  city: string;
+}
+
 export interface RiderActivity {
   date: string;
-  deliveries: number;
   earnings: number;
 }
 
@@ -46,24 +51,22 @@ export interface Rider {
   avatar: string;
   status: RiderStatus;
   rating: number;
-  deliveries: number;
   joinDate: string;
-  region: string; // City
+  region: string; 
   station: string; 
   contact: string;
   email: string;
   vehicleType: string;
-  licensePlate?: string; // 对应设备手动编号
-  vin?: string; // 新增：车辆大架号
+  licensePlate?: string; 
+  vin?: string; 
   emergencyContact?: string;
   activityHistory: RiderActivity[];
   recentFeedback: RiderFeedback[];
   idCardImage?: string; 
   contractImage?: string; 
-  // 财务结算相关字段
-  clientCompany?: string; // 甲方公司 (结算单位)
-  settlementAmount?: number; // 约定的返费金额
-  settlementStatus?: 'pending' | 'qualified' | 'processing' | 'settled'; // 结算状态
+  clientCompany?: string; 
+  settlementAmount?: number; 
+  settlementStatus?: 'pending' | 'qualified' | 'processing' | 'settled'; 
 }
 
 export interface Staff {
@@ -76,13 +79,13 @@ export interface Staff {
   employeeId: string;
   city: string;
   station: string;
-  group: string; // 分组情况
-  leader: string; // 组长
+  group: string; 
+  leader: string; 
   contact: string;
   email: string;
   joinDate: string;
   status: '在职' | '请假' | '离职';
-  dailyPerformance: number; // 每日出单情况 (平均)
+  dailyPerformance: number; 
 }
 
 export interface Applicant {
@@ -94,12 +97,10 @@ export interface Applicant {
   city: string;
   station: string;
   experience: string;
-  status: '待处理' | '面试中' | '背景调查' | '已发录用' | '已拒绝';
-  entryResult?: 'passed' | 'failed' | 'pending'; // 入职结论
+  status: '待处理' | '面试中' | '待定' | '面试通过' | '已入职' | '已拒绝';
+  entryResult?: 'passed' | 'failed' | 'pending' | 'station_assigned'; 
   appliedDate: string;
-  assignmentStatus: string;
-  aiScore?: number;
-  aiSummary?: string;
+  assignmentStatus: '待分配' | '已分配' | '跳过';
   idCardImage?: string; 
   contractImage?: string; 
 }

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, User, Phone, MapPin, FileText, CheckCircle2, Bike, ArrowRight, ShieldCheck, Camera, Scan, Loader2, X, ChevronLeft, Search, Map, AlertCircle } from 'lucide-react';
+import { ArrowLeft, User, Phone, MapPin, FileText, CheckCircle2, Bike, ArrowRight, ShieldCheck, Camera, Scan, Loader2, X, ChevronLeft, Search, Map, AlertCircle, Briefcase } from 'lucide-react';
 import { Applicant } from '../types';
 import { parseIdCardImage } from '../services/gemini';
 
@@ -9,18 +9,11 @@ interface PublicApplicationProps {
   onBack: () => void;
 }
 
-const MAJOR_CITIES = [
-  '北京', '上海', '广州', '深圳', '成都', '杭州', '重庆', '武汉', '西安', '苏州', 
-  '天津', '南京', '郑州', '长沙', '东莞', '宁波', '佛山', '合肥', '济南', '青岛',
-  '沈阳', '大连', '昆明', '厦门', '长春', '福州', '无锡', '石家庄', '南宁', '南昌'
-];
-
 const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }) => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [isManualCity, setIsManualCity] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -31,9 +24,10 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
     idNumber: '',
     contact: '',
     age: '',
-    city: '北京',
+    city: '全城/不限',
     station: '默认站点',
-    experience: ''
+    hasExperience: 'yes',
+    experienceDetail: ''
   });
 
   const validateStep1 = () => {
@@ -105,7 +99,7 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
           idNumber: result.idNumber,
           age: result.age.toString()
         }));
-        setErrors({}); // 清除错误
+        setErrors({}); 
         stopCamera();
       } else {
         alert('识别失败，请确保照片清晰且无遮挡。');
@@ -123,8 +117,11 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
 
     setIsSubmitting(true);
     
-    // 模拟提交过程
     setTimeout(() => {
+      const experienceSummary = formData.hasExperience === 'yes' 
+        ? `【熟手】${formData.experienceDetail || '曾从事过相关工作'}` 
+        : `【新手】${formData.experienceDetail || '无相关经验'}`;
+
       const newApplicant: Applicant = {
         id: 'AP-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
         name: formData.name,
@@ -133,7 +130,7 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
         age: parseInt(formData.age),
         city: formData.city,
         station: formData.station,
-        experience: formData.experience || '无经验描述',
+        experience: experienceSummary,
         status: '待处理',
         appliedDate: new Date().toISOString().split('T')[0],
         assignmentStatus: '待分配',
@@ -216,11 +213,11 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
               <span className="text-xs font-bold">返回</span>
             </button>
             <div className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-wider">
-               Encrypted Session
+               Secure Application
             </div>
           </div>
-          <h1 className="text-2xl font-black mb-1">应聘申请表</h1>
-          <p className="text-blue-100/70 text-sm">请提供真实的个人信息以通过背调</p>
+          <h1 className="text-2xl font-black mb-1">入职登记</h1>
+          <p className="text-blue-100/70 text-sm">填写您的从业背景，快速匹配站点</p>
           
           <div className="absolute -bottom-6 left-8 right-8 bg-white rounded-2xl p-4 shadow-xl flex justify-between items-center border border-slate-100">
             <div className="flex gap-2">
@@ -286,16 +283,17 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">意向城市</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">行业经验</label>
                       <div className="relative">
                         <select 
                           className="w-full pl-5 pr-10 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-800 appearance-none text-sm"
-                          value={formData.city}
-                          onChange={e => setFormData({...formData, city: e.target.value})}
+                          value={formData.hasExperience}
+                          onChange={e => setFormData({...formData, hasExperience: e.target.value})}
                         >
-                          {MAJOR_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                          <option value="yes">曾从事配送行业 (熟手)</option>
+                          <option value="no">无配送经验 (新手)</option>
                         </select>
-                        <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
+                        <Briefcase className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
                       </div>
                     </div>
                   </div>
@@ -309,15 +307,15 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
                   >
                     继续下一步 <ArrowRight size={20} />
                   </button>
-                  <p className="text-center text-[10px] text-slate-400 font-bold mt-4">点击下一步即代表您同意 RiderHub 隐私协议</p>
+                  <p className="text-center text-[10px] text-slate-400 font-bold mt-4">不限制籍贯，欢迎全国各地骑手加入</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-6 animate-in slide-in-from-right-8 duration-300 flex-1 flex flex-col">
-                <h2 className="text-lg font-black text-slate-900">2. 资质与经验</h2>
+                <h2 className="text-lg font-black text-slate-900">2. 实名与详情</h2>
                 <div className="space-y-5 flex-1">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">身份证号 (系统加密)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">身份证号 (仅供系统核验)</label>
                     <div className={`relative transition-all ${errors.idNumber ? 'ring-2 ring-red-500 rounded-2xl' : ''}`}>
                       <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
                       <input 
@@ -332,12 +330,12 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">配送工作经验 (选填)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">从业详情备注 (选填)</label>
                     <textarea 
-                      placeholder="例如：曾在美团配送3年，熟悉当地地形..." 
+                      placeholder="例如：曾在上海送美团3年，跑单熟练..." 
                       className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-800 h-32 resize-none text-sm"
-                      value={formData.experience}
-                      onChange={e => setFormData({...formData, experience: e.target.value})}
+                      value={formData.experienceDetail}
+                      onChange={e => setFormData({...formData, experienceDetail: e.target.value})}
                     />
                   </div>
                 </div>
@@ -346,23 +344,23 @@ const PublicApplication: React.FC<PublicApplicationProps> = ({ onApply, onBack }
                   <button 
                     type="button" 
                     onClick={() => setStep(1)}
-                    className="w-14 h-14 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center active:scale-95 transition-all"
+                    className="flex-1 py-5 bg-slate-100 text-slate-500 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-slate-200 active:scale-95 transition-all"
                   >
-                    <ArrowLeft size={24} />
+                    <ArrowLeft size={18} /> 上一步修改
                   </button>
                   <button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 flex items-center justify-center gap-2 hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50"
+                    className="flex-[1.5] py-5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 flex items-center justify-center gap-2 hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center gap-2">
                         <Loader2 className="animate-spin" size={18} />
-                        正在加密传输...
+                        正在处理...
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        提交入职申请 <CheckCircle2 size={20} />
+                        确认提交申请 <CheckCircle2 size={20} />
                       </div>
                     )}
                   </button>

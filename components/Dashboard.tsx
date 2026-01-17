@@ -1,45 +1,30 @@
 
 import React, { useMemo } from 'react';
 import { 
-  Users, Award, Package, TrendingUp, ChevronRight
+  Users, Award, ChevronRight, ArrowUpRight, ShieldCheck, Zap
 } from 'lucide-react';
 import { NavigationState, Rider } from '../types';
 
-const StatCard = ({ title, value, change, icon: Icon, color, onClick, subValue }: any) => {
-  const colorMap: any = {
-    blue: "from-blue-500 to-indigo-500 shadow-blue-100 text-blue-600 bg-blue-50",
-    indigo: "from-indigo-500 to-violet-500 shadow-indigo-100 text-indigo-600 bg-indigo-50",
-    purple: "from-purple-500 to-fuchsia-500 shadow-purple-100 text-purple-600 bg-purple-50",
-  };
-
-  const style = colorMap[color] || colorMap.blue;
-
-  return (
-    <div 
-      onClick={onClick}
-      className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-white hover:border-blue-200 hover:shadow-[0_20px_40px_rgba(59,130,246,0.05)] transition-all active:scale-[0.98] group text-left relative overflow-hidden"
-    >
-      <div className="flex justify-between items-start mb-6">
-        <div className={`p-3.5 rounded-2xl ${style.split(' ').slice(3).join(' ')} group-hover:scale-110 transition-transform`}>
-          <Icon size={24} />
-        </div>
-        {change && (
-          <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${change.startsWith('+') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
-            {change}
-          </span>
-        )}
+const BentoCard = ({ title, value, label, icon: Icon, onClick, className }: any) => (
+  <div 
+    onClick={onClick}
+    className={`apple-card apple-card-hover p-10 cursor-pointer flex flex-col justify-between group ${className}`}
+  >
+    <div className="flex justify-between items-start">
+      <div className="p-4 rounded-2xl bg-[#f5f5f7] text-[#1d1d1f] group-hover:bg-[#0071e3] group-hover:text-white transition-all duration-300">
+        <Icon size={24} />
       </div>
-      <h3 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">{title}</h3>
-      <div className="flex items-baseline gap-2">
-        <p className="text-4xl font-black text-slate-800 tracking-tighter">{value}</p>
-        {subValue && <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter opacity-70">{subValue}</span>}
-      </div>
-      
-      {/* 背景装饰球 */}
-      <div className={`absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-5 blur-2xl ${style.split(' ').slice(3).join(' ')}`} />
+      <ArrowUpRight size={20} className="text-[#d2d2d7] group-hover:text-[#0071e3] transition-colors" />
     </div>
-  );
-};
+    <div className="mt-8 text-left">
+      <h3 className="text-[#86868b] text-sm font-semibold uppercase tracking-widest mb-2">{title}</h3>
+      <div className="flex items-baseline gap-3">
+        <span className="text-5xl font-bold tracking-tight text-[#1d1d1f]">{value}</span>
+        {label && <span className="text-sm font-medium text-[#86868b]">{label}</span>}
+      </div>
+    </div>
+  </div>
+);
 
 interface DashboardProps {
   onNavigate: (view: NavigationState['view']) => void;
@@ -51,85 +36,94 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, riders }) => {
     const today = new Date();
     return riders.filter(rider => {
       const joinDate = new Date(rider.joinDate);
-      const diffTime = Math.abs(today.getTime() - joinDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.ceil(Math.abs(today.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
       return diffDays >= 30;
     }).length;
   }, [riders]);
 
-  const totalDeliveries = useMemo(() => {
-    return riders.reduce((acc, curr) => acc + (curr.deliveries || 0), 0);
-  }, [riders]);
-
-  const estimatedBonus = qualifiedCount * 3000;
-
   return (
-    <div className="p-10 max-w-7xl mx-auto">
-      <header className="mb-12 text-left">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
-          <TrendingUp size={12} /> 实时运营分析
-        </div>
-        <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">站点管理概览</h1>
-        <p className="text-slate-400 font-medium">查看核心指标快照，管理您的骑手运力团队。</p>
+    <div className="p-10 max-w-7xl mx-auto space-y-10">
+      <header className="text-left animate-fade-up">
+        <p className="text-[#0071e3] font-bold text-sm tracking-widest uppercase mb-3">RiderHub Core</p>
+        <h1 className="text-6xl font-bold text-[#1d1d1f] tracking-tight mb-6">更智能的人力管理。</h1>
+        <p className="text-2xl text-[#86868b] font-medium leading-relaxed max-w-3xl">
+          数字化您的物流运力资产。每一位骑手的生命周期，从招聘到分车，现在都触手可及。
+        </p>
       </header>
 
-      {/* 核心指标卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-        <StatCard 
-          title="在职骑手人数" 
-          value={riders.length.toLocaleString()} 
-          change="+12.5%" 
+      {/* Bento Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+        <BentoCard 
+          title="在职人数" 
+          value={riders.length} 
+          label="活跃" 
           icon={Users} 
-          color="blue" 
-          onClick={() => onNavigate('riders')} 
+          onClick={() => onNavigate('riders')}
+          className="md:col-span-1"
         />
-        <StatCard 
-          title="全量配送总单量" 
-          value={totalDeliveries.toLocaleString()} 
-          change="+18.4%" 
-          icon={Package} 
-          color="indigo" 
-          onClick={() => onNavigate('riders')} 
-        />
-        <StatCard 
-          title="骑手留存达标" 
+        <BentoCard 
+          title="留存指标" 
           value={qualifiedCount} 
-          subValue={`预计返点: ¥${(estimatedBonus/10000).toFixed(1)}W`} 
+          label="已达标 (30天)" 
           icon={Award} 
-          color="purple" 
-          onClick={() => onNavigate('riders')} 
+          onClick={() => onNavigate('finance')}
+          className="md:col-span-1"
         />
+        <div className="apple-card apple-card-hover md:col-span-1 p-10 bg-[#0071e3] text-white flex flex-col justify-between group">
+           <div className="flex justify-between items-start">
+              <Zap size={32} />
+              <ShieldCheck size={20} className="text-white/50" />
+           </div>
+           <div className="text-left">
+              <h3 className="text-white/70 text-sm font-semibold uppercase tracking-widest mb-2">系统合规性</h3>
+              <p className="text-4xl font-bold tracking-tight mb-2">99.8%</p>
+              <p className="text-sm font-medium text-white/60">通过 AI 自动背调</p>
+           </div>
+        </div>
       </div>
 
-      {/* 底部功能性引导 - 使用非常柔和的马卡龙渐变 */}
-      <div className="bg-gradient-to-br from-[#f8faff] to-[#eef2ff] rounded-[3rem] p-16 flex flex-col items-start justify-center text-left relative overflow-hidden border border-white shadow-[0_20px_50px_rgba(59,130,246,0.03)]">
-        <div className="relative z-10 max-w-2xl">
-          <h3 className="text-4xl font-black text-slate-800 mb-6 tracking-tight leading-tight">
-            全链路数字化<br/>骑手资产管理
-          </h3>
-          <p className="text-slate-500 text-xl mb-10 leading-relaxed max-w-lg">
-            从面试评审、背景调查到车辆资产动态绑定。RiderHub 致力于通过 AI 驱动的技术栈，降低您的运营损耗，提升人均出单效能。
+      {/* Feature Banner */}
+      <div className="apple-card apple-card-hover overflow-hidden grid grid-cols-1 lg:grid-cols-2 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+        <div className="p-16 flex flex-col justify-center text-left">
+          <h2 className="text-4xl font-bold text-[#1d1d1f] mb-8 leading-tight tracking-tight">
+            全自动入职流水线。<br/>告别繁琐纸质文档。
+          </h2>
+          <p className="text-[#86868b] text-xl mb-12 leading-relaxed">
+            集成身份证扫描与 AI 潜力分析。RiderHub 为您的站点经理节省 70% 的行政处理时间。
           </p>
-          <div className="flex gap-4">
+          <div className="flex gap-5">
             <button 
               onClick={() => onNavigate('recruitment')}
-              className="px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-500/20 flex items-center gap-2"
+              className="apple-btn-primary px-10 py-4 text-sm flex items-center gap-2"
             >
-              处理面试申请 <ChevronRight size={18} />
+              启动招聘 <ChevronRight size={18} />
             </button>
             <button 
-              onClick={() => onNavigate('riders')}
-              className="px-10 py-5 bg-white text-slate-600 border border-slate-100 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+              onClick={() => onNavigate('devices')}
+              className="apple-btn-secondary px-10 py-4 text-sm"
             >
-              查看在职档案
+              资产巡检
             </button>
           </div>
         </div>
-        
-        {/* 装饰性背景 */}
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-500/5 to-transparent pointer-events-none" />
-        <div className="absolute -right-20 -top-20 w-[400px] h-[400px] bg-white rounded-full blur-[80px] opacity-60" />
-        <div className="absolute left-[60%] top-[40%] w-[300px] h-[300px] bg-indigo-100 rounded-full blur-[100px] opacity-40" />
+        <div className="bg-[#f5f5f7] relative p-12 flex items-center justify-center">
+            <div className="w-full aspect-[4/3] bg-white rounded-[2.5rem] shadow-2xl p-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+               <div className="flex items-center gap-3 mb-10">
+                  <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                  <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                  <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+               </div>
+               <div className="space-y-6">
+                  <div className="h-2 w-1/3 bg-[#f5f5f7] rounded-full" />
+                  <div className="h-2 w-full bg-[#f5f5f7] rounded-full" />
+                  <div className="h-2 w-2/3 bg-[#f5f5f7] rounded-full" />
+                  <div className="pt-10 flex gap-4">
+                     <div className="h-24 flex-1 bg-[#f5f5f7] rounded-2xl" />
+                     <div className="h-24 flex-1 bg-[#f5f5f7] rounded-2xl" />
+                  </div>
+               </div>
+            </div>
+        </div>
       </div>
     </div>
   );
