@@ -10,6 +10,17 @@ import {
   LineChart, Line, Tooltip as RechartsTooltip 
 } from 'recharts';
 
+/**
+ * 指挥中心专用 Vertex Logo
+ */
+const VertexLogo = ({ size = 32 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 32L24 8H32L16 32H8Z" fill="white" />
+    <path d="M16 32L32 8" stroke="white" strokeWidth="6" strokeLinecap="round" opacity="0.3" />
+    <circle cx="32" cy="8" r="4" fill="white" />
+  </svg>
+);
+
 const mockLiveData = [
   { time: '10:00', orders: 400, capacity: 420 },
   { time: '10:05', orders: 450, capacity: 430 },
@@ -32,42 +43,47 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ onClose }) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[200] bg-slate-950 text-slate-100 flex flex-col font-mono overflow-hidden animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[200] bg-[#0F172A] text-slate-100 flex flex-col font-sans overflow-hidden animate-in fade-in duration-700 text-left">
       {/* Header */}
-      <header className="h-20 border-b border-slate-800 flex items-center justify-between px-10 bg-slate-900/50 backdrop-blur-xl">
-        <div className="flex items-center gap-6">
+      <header className="h-24 border-b border-white/10 flex items-center justify-between px-12 bg-slate-900/50 backdrop-blur-3xl">
+        <div className="flex items-center gap-10">
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all"
+            className="p-3 hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all active:scale-90"
           >
             <ArrowLeft size={24} />
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
-              <Activity className="text-white" size={24} />
+          <div className="flex items-center gap-6">
+            <div className="drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+              <VertexLogo size={52} />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tighter uppercase">RiderHub Live</h1>
-              <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest leading-none">实时指挥调度中心</p>
+              <h1 className="text-2xl font-black tracking-tighter text-white uppercase leading-none">
+                Vertex <span className="text-indigo-400">Live</span>
+              </h1>
+              <div className="flex items-center gap-2 mt-2 opacity-60">
+                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                 <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Real-time Telemetry</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-12 text-left">
           <div className="text-right">
-            <p className="text-[10px] text-slate-500 font-bold uppercase">系统时间</p>
-            <p className="text-xl font-bold tabular-nums">{currentTime.toLocaleTimeString()}</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">System Clock</p>
+            <p className="text-3xl font-black tabular-nums text-white tracking-tighter">{currentTime.toLocaleTimeString()}</p>
           </div>
-          <div className="h-10 w-px bg-slate-800" />
-          <div className="flex items-center gap-4">
+          <div className="h-12 w-px bg-white/10" />
+          <div className="flex items-center gap-8">
             <div className="flex flex-col items-end">
-              <span className="flex items-center gap-2 text-xs font-bold text-green-400">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                网络同步正常
+              <span className="flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]" />
+                Live Link
               </span>
-              <span className="text-[10px] text-slate-500">延迟: 14ms</span>
+              <span className="text-[10px] text-slate-500 font-bold uppercase mt-1">Uptime 100%</span>
             </div>
-            <button className="p-3 bg-slate-800 rounded-xl hover:bg-slate-700 transition-all">
+            <button className="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 hover:text-white transition-all">
               <Maximize2 size={20} />
             </button>
           </div>
@@ -75,175 +91,57 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ onClose }) => {
       </header>
 
       {/* Main Grid */}
-      <main className="flex-1 p-8 grid grid-cols-12 gap-6 overflow-hidden">
-        
-        {/* Left Column: Real-time Stats */}
-        <div className="col-span-3 space-y-6 flex flex-col">
-          <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Users size={14} className="text-blue-500" /> 全城运力状态
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 text-left">
-                <p className="text-[10px] text-slate-400 font-bold mb-1">活跃骑手</p>
-                <p className="text-2xl font-black text-blue-400">1,204</p>
+      <main className="flex-1 p-10 grid grid-cols-12 gap-8 overflow-hidden bg-[radial-gradient(circle_at_top_right,#1E293B,transparent)]">
+        {/* 指标面板 */}
+        <div className="col-span-3 space-y-8">
+          <div className="bg-slate-900 border border-white/5 p-8 rounded-[2.5rem] shadow-2xl">
+            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-8">Capacity State</h3>
+            <div className="space-y-6">
+              <div className="p-6 bg-white/[0.02] rounded-3xl border border-white/5">
+                <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">Active Operatives</p>
+                <p className="text-5xl font-black text-white tracking-tighter">1,204</p>
               </div>
-              <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 text-left">
-                <p className="text-[10px] text-slate-400 font-bold mb-1">正在配送</p>
-                <p className="text-2xl font-black text-green-400">852</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl flex-1 flex flex-col">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Radio size={14} className="text-orange-500" /> 实时警报流
-            </h3>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-slate-800">
-              {[
-                { id: 'AL-01', type: '超时预警', msg: '骑手 张伟 订单 #9021 超出预估 15min', time: '12s ago', level: 'high' },
-                { id: 'AL-02', type: '低电预警', msg: '设备 BAT-X02 电量 5%，位置: 静安', time: '45s ago', level: 'mid' },
-                { id: 'AL-03', type: '聚集预警', msg: '朝阳大悦城站点 30+ 骑手聚集，单量积压', time: '1min ago', level: 'low' },
-                { id: 'AL-04', type: '路径偏离', msg: '骑手 王强 未按规定路线配送', time: '3min ago', level: 'mid' },
-              ].map(alert => (
-                <div key={alert.id} className="p-3 bg-slate-950/50 border border-slate-800 rounded-xl text-left hover:border-slate-700 transition-all cursor-pointer">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
-                      alert.level === 'high' ? 'bg-red-500/20 text-red-400' :
-                      alert.level === 'mid' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'
-                    }`}>
-                      {alert.type}
-                    </span>
-                    <span className="text-[10px] text-slate-600 font-bold">{alert.time}</span>
-                  </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">{alert.msg}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 bg-white/[0.02] rounded-3xl border border-white/5">
+                  <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">In Transit</p>
+                  <p className="text-2xl font-black text-emerald-400">852</p>
                 </div>
-              ))}
+                <div className="p-6 bg-white/[0.02] rounded-3xl border border-white/5">
+                  <p className="text-[9px] text-slate-400 font-black mb-1 uppercase tracking-widest">Available</p>
+                  <p className="text-2xl font-black text-indigo-400">352</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Center: Live Map Simulation */}
-        <div className="col-span-6 bg-slate-900/30 border border-slate-800 rounded-3xl relative overflow-hidden group">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce?q=80&w=2000')] opacity-10 grayscale brightness-50 contrast-125 bg-cover bg-center transition-transform duration-[10s] group-hover:scale-110" />
-          
-          {/* Map Overlay UI */}
+        {/* 动态可视化占位 */}
+        <div className="col-span-9 bg-slate-900 border border-white/5 rounded-[3.5rem] relative overflow-hidden group shadow-2xl">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1449156001935-d2863fb72690?q=80&w=2000')] opacity-[0.05] grayscale invert bg-cover bg-center transition-transform duration-[60s] group-hover:scale-110" />
           <div className="absolute inset-0 flex items-center justify-center">
-            {/* Visual simulation of dots/routes */}
-            <div className="relative w-full h-full">
-               {[...Array(12)].map((_, i) => (
-                 <div key={i} className="absolute animate-pulse" style={{
-                   left: `${Math.random() * 80 + 10}%`,
-                   top: `${Math.random() * 80 + 10}%`
-                 }}>
-                   <div className="w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_10px_#2563eb]" />
-                 </div>
-               ))}
-               <div className="absolute top-1/4 left-1/3 p-4 bg-slate-950/80 backdrop-blur-md border border-blue-500/50 rounded-2xl shadow-2xl">
-                 <div className="flex items-center gap-2 mb-2">
-                   <Target className="text-blue-500" size={16} />
-                   <span className="text-xs font-black">朝阳商圈实时负载</span>
-                 </div>
-                 <div className="space-y-1">
-                   <div className="flex justify-between text-[10px] text-slate-400"><span>在岗运力</span><span>142人</span></div>
-                   <div className="flex justify-between text-[10px] text-slate-400"><span>待配送单</span><span>358单</span></div>
-                   <div className="h-1 w-32 bg-slate-800 rounded-full mt-2 overflow-hidden">
-                     <div className="h-full w-4/5 bg-blue-500" />
-                   </div>
-                 </div>
+            <div className="text-center">
+               <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                  <Target size={40} className="text-indigo-400" />
                </div>
+               <h2 className="text-2xl font-bold text-white tracking-tight">全城网格监控已开启</h2>
+               <p className="text-slate-500 text-sm mt-2">正在接收来自 12 个核心分站的实时遥测数据</p>
             </div>
-          </div>
-
-          <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none">
-            <div className="p-4 bg-slate-950/60 backdrop-blur border border-slate-800 rounded-2xl">
-              <h4 className="text-[10px] font-black text-slate-500 mb-2 uppercase">全城热力指数</h4>
-              <div className="flex gap-1 h-8 items-end">
-                {[4,6,3,8,9,4,2,6,7,5].map((h, i) => (
-                  <div key={i} className="w-2 bg-blue-500/50 rounded-t-sm" style={{ height: `${h * 10}%` }} />
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-               <button className="pointer-events-auto p-3 bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/20"><Zap size={20} /></button>
-               <button className="pointer-events-auto p-3 bg-slate-800 rounded-xl hover:bg-slate-700 transition-all border border-slate-700"><MapIcon size={20} /></button>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Performance Analysis */}
-        <div className="col-span-3 space-y-6">
-          <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">实时订单/吞吐量</h3>
-            <div className="h-48 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockLiveData}>
-                  <XAxis dataKey="time" hide />
-                  <YAxis hide />
-                  <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '8px', fontSize: '10px' }} />
-                  <Line type="monotone" dataKey="orders" stroke="#2563eb" strokeWidth={3} dot={false} />
-                  <Line type="monotone" dataKey="capacity" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex justify-between mt-4">
-              <div className="text-left">
-                <p className="text-[10px] text-slate-500 uppercase">当前需量</p>
-                <p className="text-lg font-bold text-blue-400">700 单/h</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] text-slate-500 uppercase">最大供给</p>
-                <p className="text-lg font-bold text-green-400">680 单/h</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">节点计算资源</h3>
-            <div className="space-y-4">
-              {[
-                { label: '核心调度集群', val: 78, status: 'ok' },
-                { label: '边缘计算单元', val: 42, status: 'ok' },
-                { label: 'AI 路径优化器', val: 91, status: 'heavy' },
-              ].map((node, i) => (
-                <div key={i} className="space-y-2">
-                  <div className="flex justify-between items-center text-[10px] font-bold">
-                    <span className="text-slate-400">{node.label}</span>
-                    <span className={node.status === 'heavy' ? 'text-orange-400' : 'text-blue-400'}>{node.val}%</span>
-                  </div>
-                  <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-                    <div className={`h-full transition-all duration-1000 ${node.status === 'heavy' ? 'bg-orange-500' : 'bg-blue-500'}`} style={{ width: `${node.val}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-blue-600 p-6 rounded-2xl relative overflow-hidden group">
-            <div className="absolute -right-4 -bottom-4 opacity-10 transition-transform group-hover:scale-125 duration-700">
-               <Cpu size={120} />
-            </div>
-            <h3 className="text-xs font-black text-blue-100 uppercase tracking-widest mb-1">系统全自动化指数</h3>
-            <p className="text-3xl font-black text-white">94.2%</p>
-            <p className="text-[10px] text-blue-100 mt-2">AI 智能接管中，人工介入比例: 5.8%</p>
           </div>
         </div>
       </main>
 
-      {/* Footer Ticker */}
-      <footer className="h-10 bg-blue-600 border-t border-blue-500 flex items-center overflow-hidden">
-        <div className="flex items-center gap-10 px-10 whitespace-nowrap animate-marquee">
-          <span className="flex items-center gap-2 text-[10px] font-black uppercase text-white">
-            <Bell size={12} /> 实时动态:
+      <footer className="h-16 bg-slate-900 border-t border-white/5 flex items-center overflow-hidden">
+        <div className="flex items-center gap-32 px-12 whitespace-nowrap animate-marquee">
+          <span className="flex items-center gap-6 text-[11px] font-black uppercase text-white bg-indigo-600 px-10 py-3 rounded-full">
+            <Activity size={18} className="animate-pulse" /> Global System State: Stable
           </span>
           {[
-            '#静安站点 录入新骑手 1名',
-            '全城平均配送时效 28.4min',
-            '今日累计配送单量突破 45,000',
-            '异常天气预警：局部阵雨，请通知骑手注意安全',
-            '浦东分部 完成周度运力达标 100%'
+            '#BJ_STATION_ALPHA deployed 14 new couriers',
+            'Network average latency baseline: 11.4ms',
+            'Throughput exceeded daily forecast by 12.4%',
+            'Regional saturation forecast: +14.2% Growth'
           ].map((text, i) => (
-            <span key={i} className="text-[10px] font-bold text-blue-50">{text}</span>
+            <span key={i} className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.5em] italic">{text}</span>
           ))}
         </div>
       </footer>
@@ -255,7 +153,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ onClose }) => {
         }
         .animate-marquee {
           display: flex;
-          animation: marquee 30s linear infinite;
+          animation: marquee 80s linear infinite;
         }
       `}</style>
     </div>

@@ -1,26 +1,31 @@
 
 import React, { useMemo } from 'react';
 import { 
-  Users, Award, ChevronRight, ArrowUpRight, ShieldCheck, Zap
+  Users, Award, ChevronRight, ArrowUpRight, ClipboardList, Zap, ShieldCheck, 
+  TrendingUp, BarChart3, MapPin, MessageCircle, MoreHorizontal, Activity, Layers
 } from 'lucide-react';
-import { NavigationState, Rider } from '../types';
+import { NavigationState, Rider, Applicant } from '../types';
 
-const BentoCard = ({ title, value, label, icon: Icon, onClick, className }: any) => (
+const MetricCard = ({ title, value, label, icon: Icon, onClick, trend, colorClass = "text-indigo-600" }: any) => (
   <div 
     onClick={onClick}
-    className={`apple-card apple-card-hover p-10 cursor-pointer flex flex-col justify-between group ${className}`}
+    className="apple-card p-6 apple-card-hover cursor-pointer group h-44 flex flex-col justify-between border border-slate-100"
   >
     <div className="flex justify-between items-start">
-      <div className="p-4 rounded-2xl bg-[#f5f5f7] text-[#1d1d1f] group-hover:bg-[#0071e3] group-hover:text-white transition-all duration-300">
-        <Icon size={24} />
+      <div className={`p-3 bg-slate-50 rounded-2xl ${colorClass} group-hover:bg-indigo-600 group-hover:text-white transition-all border border-transparent group-hover:border-slate-100 shadow-sm`}>
+        <Icon size={22} />
       </div>
-      <ArrowUpRight size={20} className="text-[#d2d2d7] group-hover:text-[#0071e3] transition-colors" />
+      {trend && (
+        <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-full flex items-center gap-1">
+          <TrendingUp size={10} /> {trend}%
+        </span>
+      )}
     </div>
-    <div className="mt-8 text-left">
-      <h3 className="text-[#86868b] text-sm font-semibold uppercase tracking-widest mb-2">{title}</h3>
-      <div className="flex items-baseline gap-3">
-        <span className="text-5xl font-bold tracking-tight text-[#1d1d1f]">{value}</span>
-        {label && <span className="text-sm font-medium text-[#86868b]">{label}</span>}
+    <div className="text-left">
+      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{title}</p>
+      <div className="flex items-baseline gap-2">
+        <span className="text-4xl font-black text-slate-900 tracking-tighter">{value}</span>
+        <span className="text-xs font-bold text-slate-400">{label}</span>
       </div>
     </div>
   </div>
@@ -29,101 +34,102 @@ const BentoCard = ({ title, value, label, icon: Icon, onClick, className }: any)
 interface DashboardProps {
   onNavigate: (view: NavigationState['view']) => void;
   riders: Rider[];
+  applicants: Applicant[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate, riders }) => {
-  const qualifiedCount = useMemo(() => {
+const Dashboard: React.FC<DashboardProps> = ({ onNavigate, riders, applicants }) => {
+  const stats = useMemo(() => {
     const today = new Date();
-    return riders.filter(rider => {
-      const joinDate = new Date(rider.joinDate);
-      const diffDays = Math.ceil(Math.abs(today.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
-      return diffDays >= 30;
+    const qualified = riders.filter(r => {
+      const join = new Date(r.joinDate);
+      return Math.ceil(Math.abs(today.getTime() - join.getTime()) / (1000 * 60 * 60 * 24)) >= 30;
     }).length;
-  }, [riders]);
+    return {
+      total: riders.length,
+      qualified,
+      pending: applicants.filter(a => a.status === '待处理').length
+    };
+  }, [riders, applicants]);
 
   return (
-    <div className="p-10 max-w-7xl mx-auto space-y-10">
-      <header className="text-left animate-fade-up">
-        <p className="text-[#0071e3] font-bold text-sm tracking-widest uppercase mb-3">RiderHub Core</p>
-        <h1 className="text-6xl font-bold text-[#1d1d1f] tracking-tight mb-6">更智能的人力管理。</h1>
-        <p className="text-2xl text-[#86868b] font-medium leading-relaxed max-w-3xl">
-          数字化您的物流运力资产。每一位骑手的生命周期，从招聘到分车，现在都触手可及。
-        </p>
+    <div className="p-10 max-w-7xl mx-auto space-y-10 text-left animate-in fade-in duration-700">
+      <header className="flex justify-between items-end">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
+            Operations Management
+          </div>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">运营概览</h1>
+          <p className="text-slate-500 font-medium mt-1">全局数字化视野，实时监控招聘流水线与运力负载。</p>
+        </div>
+        <div className="flex gap-4">
+           <button onClick={() => onNavigate('finance')} className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[12px] font-bold hover:bg-slate-50 transition-all shadow-sm">对账结算</button>
+           <button onClick={() => onNavigate('recruitment')} className="px-8 py-3 bg-indigo-600 text-white rounded-2xl text-[12px] font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">招聘增补</button>
+        </div>
       </header>
 
-      {/* Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-        <BentoCard 
-          title="在职人数" 
-          value={riders.length} 
-          label="活跃" 
-          icon={Users} 
-          onClick={() => onNavigate('riders')}
-          className="md:col-span-1"
-        />
-        <BentoCard 
-          title="留存指标" 
-          value={qualifiedCount} 
-          label="已达标 (30天)" 
-          icon={Award} 
-          onClick={() => onNavigate('finance')}
-          className="md:col-span-1"
-        />
-        <div className="apple-card apple-card-hover md:col-span-1 p-10 bg-[#0071e3] text-white flex flex-col justify-between group">
-           <div className="flex justify-between items-start">
-              <Zap size={32} />
-              <ShieldCheck size={20} className="text-white/50" />
-           </div>
-           <div className="text-left">
-              <h3 className="text-white/70 text-sm font-semibold uppercase tracking-widest mb-2">系统合规性</h3>
-              <p className="text-4xl font-bold tracking-tight mb-2">99.8%</p>
-              <p className="text-sm font-medium text-white/60">通过 AI 自动背调</p>
-           </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <MetricCard title="在职骑手" value={stats.total} label="当前车队规模" icon={Users} trend={4.2} onClick={() => onNavigate('riders')} />
+        <MetricCard title="留存达标" value={stats.qualified} label="已过30天观察期" icon={ShieldCheck} trend={12} colorClass="text-emerald-600" onClick={() => onNavigate('finance')} />
+        <MetricCard title="面试池" value={stats.pending} label="待评估申请" icon={ClipboardList} onClick={() => onNavigate('recruitment')} />
+        <MetricCard title="资产负荷" value={stats.total} label="在线载具" icon={Zap} colorClass="text-indigo-600" onClick={() => onNavigate('devices')} />
       </div>
 
-      {/* Feature Banner */}
-      <div className="apple-card apple-card-hover overflow-hidden grid grid-cols-1 lg:grid-cols-2 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-        <div className="p-16 flex flex-col justify-center text-left">
-          <h2 className="text-4xl font-bold text-[#1d1d1f] mb-8 leading-tight tracking-tight">
-            全自动入职流水线。<br/>告别繁琐纸质文档。
-          </h2>
-          <p className="text-[#86868b] text-xl mb-12 leading-relaxed">
-            集成身份证扫描与 AI 潜力分析。RiderHub 为您的站点经理节省 70% 的行政处理时间。
-          </p>
-          <div className="flex gap-5">
-            <button 
-              onClick={() => onNavigate('recruitment')}
-              className="apple-btn-primary px-10 py-4 text-sm flex items-center gap-2"
-            >
-              启动招聘 <ChevronRight size={18} />
-            </button>
-            <button 
-              onClick={() => onNavigate('devices')}
-              className="apple-btn-secondary px-10 py-4 text-sm"
-            >
-              资产巡检
-            </button>
-          </div>
-        </div>
-        <div className="bg-[#f5f5f7] relative p-12 flex items-center justify-center">
-            <div className="w-full aspect-[4/3] bg-white rounded-[2.5rem] shadow-2xl p-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
-               <div className="flex items-center gap-3 mb-10">
-                  <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-                  <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
-                  <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+         <div className="lg:col-span-8 apple-card p-10 flex flex-col border border-slate-100">
+            <div className="flex justify-between items-center mb-10">
+               <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-slate-50 rounded-xl text-indigo-600"><MapPin size={20} /></div>
+                  <div><h3 className="text-lg font-bold text-slate-900 tracking-tight">各分站运力热图</h3><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Fleet Distribution Matrix</p></div>
                </div>
-               <div className="space-y-6">
-                  <div className="h-2 w-1/3 bg-[#f5f5f7] rounded-full" />
-                  <div className="h-2 w-full bg-[#f5f5f7] rounded-full" />
-                  <div className="h-2 w-2/3 bg-[#f5f5f7] rounded-full" />
-                  <div className="pt-10 flex gap-4">
-                     <div className="h-24 flex-1 bg-[#f5f5f7] rounded-2xl" />
-                     <div className="h-24 flex-1 bg-[#f5f5f7] rounded-2xl" />
+               <button className="p-2 text-slate-300 hover:text-slate-900 transition-colors"><MoreHorizontal size={20}/></button>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1">
+               {[
+                 { name: '朝阳三里屯站', cap: '94%', count: 42, color: 'bg-emerald-500' },
+                 { name: '静安寺站', cap: '62%', count: 28, color: 'bg-indigo-600' },
+                 { name: '南山科技园站', cap: '88%', count: 56, color: 'bg-indigo-600' },
+                 { name: '武林广场站', cap: '32%', count: 14, color: 'bg-indigo-400' }
+               ].map((site, i) => (
+                 <div key={i} className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 group hover:bg-white hover:shadow-xl transition-all duration-500">
+                    <div className="flex justify-between items-start mb-6">
+                      <div><p className="text-sm font-bold text-slate-900">{site.name}</p><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{site.count} Units Active</p></div>
+                      <div className="p-1.5 rounded-lg text-slate-200 group-hover:text-indigo-600 transition-colors"><Activity size={16} /></div>
+                    </div>
+                    <div className="space-y-3">
+                       <div className="flex justify-between text-xs font-black text-slate-700"><span className="text-slate-400 uppercase tracking-tighter">Utilization</span><span>{site.cap}</span></div>
+                       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className={`h-full ${site.color} opacity-90 rounded-full transition-all duration-1000`} style={{ width: site.cap }} />
+                       </div>
+                    </div>
+                 </div>
+               ))}
+            </div>
+         </div>
+
+         <div className="lg:col-span-4 flex flex-col gap-6 text-left">
+            <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden flex-1 flex flex-col justify-between shadow-2xl">
+               <div className="absolute top-0 right-0 p-10 opacity-[0.05] rotate-12 scale-150"><MessageCircle size={180} /></div>
+               <div className="relative z-10">
+                  <div className="p-3 bg-white/10 rounded-2xl w-fit mb-8 backdrop-blur-md"><Layers size={24} className="text-indigo-400" /></div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.3em] mb-4 text-indigo-400">AI Intelligence</h3>
+                  <p className="text-2xl font-bold leading-tight tracking-tight">RiderHub AI 已就绪。<br/>随时为您分析运营策略。</p>
+               </div>
+               <button onClick={() => onNavigate('ai-consultant')} className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-[12px] font-bold uppercase tracking-[0.2em] transition-all mt-10 relative z-10 shadow-xl shadow-indigo-900/40 active:scale-95">对话 AI 专家</button>
+            </div>
+            
+            <div className="apple-card p-10 border border-slate-100 flex flex-col justify-between">
+               <div>
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 flex items-center gap-2"><BarChart3 size={14} className="text-indigo-600" /> Financial Report</h3>
+                  <div className="space-y-6">
+                     <div className="flex justify-between items-end"><span className="text-xs font-bold text-slate-500">本月待结算</span><span className="text-2xl font-black text-slate-900 tracking-tighter">¥142,000</span></div>
+                     <div className="h-px bg-slate-50" />
+                     <div className="flex justify-between items-end"><span className="text-xs font-bold text-slate-500">本月已支出</span><span className="text-2xl font-black text-emerald-600 tracking-tighter">¥28,400</span></div>
                   </div>
                </div>
+               <button onClick={() => onNavigate('finance')} className="mt-8 text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform">前往对账中心 <ChevronRight size={14} /></button>
             </div>
-        </div>
+         </div>
       </div>
     </div>
   );

@@ -32,17 +32,17 @@ export interface RiderFeedback {
 export interface Device {
   id: string;
   type: '电动车' | '换电电池';
-  code: string; // 资产代码
-  vin?: string; // 大架号
-  brand?: string; // 品牌
-  color?: string; // 颜色
+  code: string; 
+  vin?: string; 
+  brand?: string; 
+  color?: string; 
   status: '正常' | '维修中' | '低电量' | '异常';
   batteryLevel?: number;
-  rider: string; // 绑定骑手姓名
+  rider: string; 
   lastSync: string;
   city: string;
   station: string;
-  location: string; // 车辆内部编号
+  location: string; 
 }
 
 export interface Rider {
@@ -52,6 +52,7 @@ export interface Rider {
   status: RiderStatus;
   rating: number;
   joinDate: string;
+  resignDate?: string;
   region: string; 
   station: string; 
   contact: string;
@@ -119,6 +120,6 @@ export interface JobPost {
 export type AppPort = 'admin' | 'applicant-portal';
 
 export interface NavigationState {
-  view: 'dashboard' | 'recruitment' | 'riders' | 'jobs' | 'messages' | 'settings' | 'devices' | 'vehicle-assignment' | 'finance';
+  view: 'dashboard' | 'recruitment' | 'riders' | 'jobs' | 'messages' | 'settings' | 'devices' | 'vehicle-assignment' | 'finance' | 'ai-consultant';
   port: AppPort;
 }
